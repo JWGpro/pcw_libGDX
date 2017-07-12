@@ -7,24 +7,20 @@ import com.pcw.game.Menus.MainMenu;
 
 import java.io.*;
 import java.nio.channels.FileChannel;
+import java.util.Scanner;
 
 public class PCW extends Game {
 
     static public Skin gameSkin;
 
     public void create() {
-        // Check presence of assets in external directory and write them if necessary.
-        // "D:/Desktop/TheProjects/Programming/~libGDX/pcw/android/assets"
-
-        // Either manifest,
-        // separate APK/JAR/IDE handling,
-        // zipped up assets...would this involve loading all assets into RAM at once? Could be a problem.
-        //  tar/jar...non-compressed so I can just order the files and grab them as necessary rather than load all...
-        System.out.println(Gdx.app.getType());
-
-//        checkFiles(new File(Gdx.files.internal(".").toString()), false);
-//        checkFiles(new File(Gdx.files.classpath(".").toString()), false);
-//        checkFiles(new File(Gdx.files.local(".").toString()), false);
+        // Read the asset manifest and check each line in it.
+        try {
+            checkManifest();
+        } catch (IOException e) {
+            System.out.println("IO exception while checking asset manifest:\n " + e.toString());
+        }
+        // When done, change build.gradle to run the manifest generator script, and commit it and the script.
 
         // Set skin and set screen to the main menu.
         gameSkin = new Skin(Gdx.files.internal("menuskins/Glassy/glassy-ui.json"));
@@ -40,51 +36,44 @@ public class PCW extends Game {
         gameSkin.dispose();
     }
 
-    private void checkFiles(final File searchpath, Boolean overwrite) {
-        File[] files = searchpath.listFiles();
+    private void checkManifest() throws IOException {
+        Scanner scanner = new Scanner(new FileInputStream("assetManifest.txt"), "UTF-8");
+        try {
+            while (scanner.hasNextLine()) {
+                // For each line (file) in the manifest.
+                // Check presence of assets in external directory and write them if necessary.
+                checkFile(scanner.nextLine(), false);
+            }
+        }
+        finally {
+            // Something else here? Need to catch something?
+            scanner.close();
+        }
+    }
 
-        if (files == null) {
-            // Handle path that is not a directory, or other error...
-            System.out.println("listFiles() returned null for search path argument: " + searchpath.toString());
+    private void checkFile(String inpath, Boolean overwrite) {
+        File dest = new File(Gdx.files.getExternalStoragePath() + "PCW/" + inpath);
+        // When you have a file, two possible cases.
+
+        if (dest.exists() && !overwrite) {
+            // First case: file exists, and overwrite is false. Do nothing.
+            System.out.println("Found file in external dir: " + dest.toString());
         } else {
-            // Normal case.
-            for (File file : files) {
-
-                // Get the trailing bit for internal-external operations.
-                String path = file.toString();
-                String expath = Gdx.files.getExternalStoragePath();
-
-                if (file.isDirectory()) {
-                    // If the path is a directory rather than a file, recurse.
-                    checkFiles(file, overwrite);
-                } else {
-                    // When you have a file, two possible cases.
-                    File source = new File(path);
-                    System.out.println(source.toString());
-                    File dest = new File(expath + "PCW/" + path);
-                    System.out.println(dest.toString());
-                    File destDir = new File(dest.getParent());
-
-                    if (dest.exists() && !overwrite) {
-                        // First case: file exists, and overwrite is false. Do nothing.
-                        System.out.println("Found file in external dir: " + path);
-                    } else {
-                        // Second case: file doesn't exist, or overwrite is true (remaining 3 of 4 cases). Copy file.
-                        try {
-                            copyFile(source, destDir, dest);
-                            System.out.println("Copied file to external dir: " + path);
-                        } catch (IOException e) {
-                            System.out.println("Exception while copying file " + path + ":\n " + e.toString());
-                        }
-
-                    }
-                }
+            File source = new File(inpath);
+            File destDir = new File(dest.getParent());
+            // Second case: file doesn't exist, or overwrite is true (remaining 3 of 4 cases). Copy file.
+            try {
+                copyFile(source, destDir, dest);
+                System.out.println("Copied file to external dir: " + dest.toString());
+            } catch (IOException e) {
+                System.out.println("IO exception while copying file " + dest.toString() + ":\n " + e.toString());
             }
         }
     }
 
     private void copyFile(File sourceFile, File destDir, File destFile) throws IOException {
         if (!destDir.exists()) {
+            // Make the directory if it doesn't exist.
             boolean dirCreated = destDir.mkdirs();
             if (!dirCreated) {
                 System.out.println("Directory could not be created: " + destDir.toString());
@@ -93,6 +82,7 @@ public class PCW extends Game {
         }
 
         if(!destFile.exists()) {
+            // Make the file if it doesn't exist.
             boolean fileCreated = destFile.createNewFile();
             if (!fileCreated) {
                 System.out.println("File could not be created: " + destFile.toString());
