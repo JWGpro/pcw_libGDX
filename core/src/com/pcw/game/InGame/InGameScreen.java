@@ -1,6 +1,7 @@
 package com.pcw.game.InGame;
 
 import com.badlogic.gdx.*;
+import com.badlogic.gdx.assets.loaders.resolvers.ExternalFileHandleResolver;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
@@ -44,7 +45,7 @@ public class InGameScreen implements Screen, InputProcessor {
         stage = new Stage(new ScreenViewport(camera));
 
         // Tiled map stuff.
-        tiledMap = new TmxMapLoader().load("testmap.tmx");
+        tiledMap = new TmxMapLoader(new ExternalFileHandleResolver()).load("PCW/maps/testmap.tmx");
         tiledMapRenderer = new OrthogonalTiledMapRenderer(tiledMap);
 
 //        // Placeholder listener. Only here to show how this sort of thing works.
@@ -58,7 +59,7 @@ public class InGameScreen implements Screen, InputProcessor {
 
         // Initialise game mode script.
         scriptmanager = new ScriptManager();
-        scriptmanager.executeInit("Classic", this, camera, stage, tiledMap);
+        scriptmanager.executeInit("Classic", this, camera, stage, tiledMap, Gdx.files.getExternalStoragePath());
 
         // Set input processor to allow the argument to receive input events.
         // If you pass "stage", any stage.addListener stuff works.

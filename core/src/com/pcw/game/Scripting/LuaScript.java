@@ -36,7 +36,7 @@ public class LuaScript implements Script {
     public boolean load(String scriptFileName) {
         this.scriptFileName = scriptFileName;
 
-        if (!Gdx.files.internal(scriptFileName).exists()) {
+        if (!Gdx.files.external(scriptFileName).exists()) {
             this.scriptFileExists = false;
             return false;
         } else {
@@ -44,7 +44,7 @@ public class LuaScript implements Script {
         }
 
         try {
-            chunk = globals.load(Gdx.files.internal(scriptFileName).readString());
+            chunk = globals.load(Gdx.files.external(scriptFileName).readString());
         } catch (LuaError e) {
             // If reading the file fails, then log the error to the console
             Gdx.app.log("Debug", "LUA ERROR! " + e.getMessage());

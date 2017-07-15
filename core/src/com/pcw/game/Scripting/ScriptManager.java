@@ -20,7 +20,7 @@ public final class ScriptManager {
     // Constructor
     public ScriptManager() {
         ScriptManager.scripts = new ObjectMap<String, LuaScript>();
-        ScriptManager.json = new JsonReader().parse(Gdx.files.external("data/scripts/scripts.json"));
+        ScriptManager.json = new JsonReader().parse(Gdx.files.external("PCW/gamemodes/scripts.json"));
     }
 
     // Load file by script key, returns false if fails
@@ -29,7 +29,8 @@ public final class ScriptManager {
         if (ScriptManager.json.has(key)) {
             if (ScriptManager.json.get(key).isString()) {
                 // Get the script filename from the json file and load the script
-                boolean success = ScriptManager.add(key, "data/scripts/" + ScriptManager.json.getString(key));
+                // THIS WILL BE LOADED EXTERNALLY DUE TO A MODIFICATION TO THE LuaScript CLASS.
+                boolean success = ScriptManager.add(key, "PCW/gamemodes/" + ScriptManager.json.getString(key));
                 if (!success) {
                     Gdx.app.log("Debug", "Loading of " + key + " script failed!");
                 } else {

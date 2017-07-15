@@ -17,6 +17,9 @@ public class MapActor extends Actor {
     // Possibly other stuff like tints (for teams), rotation, mirrored etc.
 
     public MapActor(String assetdir, String spritename, Float alphaval) {
+        //
+        // This Texture should be external. There's another line later which does the same thing.
+        //
         sprite = new Sprite(new Texture(assetdir + spritename));
         alpha = alphaval;
 
