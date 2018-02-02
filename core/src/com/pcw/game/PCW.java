@@ -17,6 +17,9 @@ public class PCW extends Game {
     static public Skin gameSkin;
 
     public void create() {
+        // Catch the Android back key.
+        Gdx.input.setCatchBackKey(true);
+
         // Read the asset manifest and check each line in it.
         try {
             checkManifest();
@@ -46,7 +49,7 @@ public class PCW extends Game {
             while ((line = br.readLine()) != null) {
                 // For each line (file) in the manifest.
                 // Check presence of assets in external directory and write them if necessary.
-                checkFile(line, false);
+                checkFile(line, true);
             }
         }
         finally {

@@ -25,6 +25,9 @@ public class LuaScript implements Script {
     // Keep the file name, so it can be reloaded when needed
     public String scriptFileName;
 
+    // store the returned values from function
+    public Varargs lastResults;
+
     // Init the object and call the load method
     public LuaScript(String scriptFileName) {
         this.scriptFileName = scriptFileName;
@@ -103,7 +106,7 @@ public class LuaScript implements Script {
 
             try {
                 // Run the function with the converted parameters
-                luaFunction.invoke(parameters);
+                lastResults = luaFunction.invoke(parameters);
             } catch (LuaError e) {
                 // Log the error to the console if failed
                 Gdx.app.log("Debug", "LUA ERROR! " + e.getMessage());

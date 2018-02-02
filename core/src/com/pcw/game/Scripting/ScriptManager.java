@@ -9,6 +9,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.utils.JsonReader;
 import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.ObjectMap;
+import org.luaj.vm2.Varargs;
 
 /*
  * Manages the Lua script cache and provides methods to call Lua script functions
@@ -132,5 +133,9 @@ public final class ScriptManager {
     // Clear the whole script cache
     public static void dispose() {
         ScriptManager.scripts = new ObjectMap<String, LuaScript>();
+    }
+
+    public static Varargs getLastResults(String key){
+        return ScriptManager.scripts.get(key).lastResults;
     }
 }

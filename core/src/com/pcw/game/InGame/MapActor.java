@@ -1,5 +1,6 @@
 package com.pcw.game.InGame;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
@@ -16,15 +17,12 @@ public class MapActor extends Actor {
     private Float alpha;
     // Possibly other stuff like tints (for teams), rotation, mirrored etc.
 
-    public MapActor(String assetdir, String spritename, Float alphaval) {
-        //
-        // This Texture should be external. There's another line later which does the same thing.
-        //
-        sprite = new Sprite(new Texture(assetdir + spritename));
+    public MapActor(String spritedir, Float alphaval, Float bound) {
+        sprite = new Sprite(new Texture(Gdx.files.external(spritedir)));
         alpha = alphaval;
 
         // The bounds could either be the size of the sprite (could overlap/exceed cell), or the cell size of the map.
-        setBounds(this.getX(), this.getY(),32.0f,32.0f);
+        setBounds(this.getX(), this.getY(), bound, bound);
         setTouchable(Touchable.enabled);
 
         addListener(new InputListener(){
@@ -50,7 +48,7 @@ public class MapActor extends Actor {
 
     public void setSprite(String spritedir) {
         sprite.getTexture().dispose();
-        sprite.setTexture(new Texture(spritedir));
+        sprite.setTexture(new Texture(Gdx.files.external(spritedir)));
     }
 
     public Float getAlpha() {
