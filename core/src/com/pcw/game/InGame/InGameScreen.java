@@ -2,16 +2,21 @@ package com.pcw.game.InGame;
 
 import com.badlogic.gdx.*;
 import com.badlogic.gdx.assets.loaders.resolvers.ExternalFileHandleResolver;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.input.GestureDetector;
 import com.badlogic.gdx.input.GestureDetector.GestureListener;
 import com.badlogic.gdx.maps.tiled.*;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.*;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
+import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.pcw.game.PCW;
 import com.pcw.game.Scripting.ScriptManager;
@@ -45,22 +50,10 @@ public class InGameScreen implements Screen, InputProcessor, GestureListener {
 
         // Game stage and UI stage (independent updating).
         gameStage = new Stage(new ScreenViewport(gameCamera));
-        UIStage = new Stage(new ScreenViewport(UICamera));
-        UICamera.position.set(w/4,-h/2,0f);
-
-//        TextButton menuButton = new TextButton("Resume", PCW.gameSkin);
-//        menuButton.addListener(new InputListener(){
-//            @Override
-//            public void touchUp (InputEvent event, float x, float y, int pointer, int button) {
-//                System.out.println("button pressed");
-//            }
-//            @Override
-//            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
-//                return true;
-//            }
-//        });
-//
-//        menuActors.addActor(menuButton);
+        UIStage = new Stage(new FitViewport(w, h, UICamera));
+//        UICamera.zoom = UICamera.zoom * 2;
+//        UICamera.position.set(w/4,-h/2,0f);
+//        UICamera.position.set(0f,0f,0f);
 
         // Tiled map stuff.
         tiledMap = new TmxMapLoader(new ExternalFileHandleResolver()).load("PCW/maps/testmap.tmx");
@@ -68,7 +61,7 @@ public class InGameScreen implements Screen, InputProcessor, GestureListener {
 
         // Initialise game mode script.
         scriptmanager = new ScriptManager();
-        scriptmanager.executeInit("Classic", this, gameCamera, gameStage, menuActors, tiledMap, Gdx.files.getExternalStoragePath());
+        scriptmanager.executeInit("Classic", this, gameCamera, gameStage, UICamera, UIStage, tiledMap, Gdx.files.getExternalStoragePath());
 
         // Set input processor to allow the argument to receive input events.
         // If you pass "stage", any stage.addListener stuff works, and Actor actions work.
@@ -206,6 +199,8 @@ public class InGameScreen implements Screen, InputProcessor, GestureListener {
         // use true here to center the camera
         // that's what you probably want in case of a UI
         gameStage.getViewport().update(width, height, false);
+        // how about for UI?
+        UIStage.getViewport().update(width, height, false);
 
     }
 

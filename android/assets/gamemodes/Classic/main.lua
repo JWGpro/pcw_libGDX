@@ -17,21 +17,14 @@ local u
 
 local world = {}
 
---Passed from Java.
-world.gamescreen = nil
-world.camera = nil
-local gstage
-local mactors
-local tiledMap
-local extdir
-
 world.units = {}
 world.map = {}
 world.cursor = nil
 world.panning = false
 local lastX local lastY local offX local offY
 world.states = {DEFAULT = 1, MOVE = 2, ACT = 3, TARGET = 4} --Globals?
-world.acts = {[1] = "wait", [2] = "attack", [3] = "capture", [4] = "supply"}
+--world.acts = {[1] = "Attack"}
+world.acts = {[1] = "Attack", [2] = "Capture", [3] = "Supply", [4] = "Wait", [5] = "Embark"}
 
 --Contains all the state modifiable through the selection process.
 world.selection = {}
@@ -53,16 +46,17 @@ sel.movesleft
 --The replay may need each Command to self. the world as a snapshot, or snapshot by other means.
 local history = {}
 
-function init(thegamescreen, thecamera, gamestage, menuactors, thetiledMap, theextdir)
+function init(thegamescreen, thecamera, gamestage, theUIcamera, theUIstage, thetiledMap, theextdir)
   world.gamescreen = thegamescreen
   world.camera = thecamera
-  gstage = gamestage
-  mactors = menuactors
-  tiledMap = thetiledMap --TiledMap object.
-  extdir = theextdir
+  local gstage = gamestage
+  world.UIcamera = theUIcamera
+  world.UIstage = theUIstage
+  local tiledMap = thetiledMap --TiledMap object.
+  world.extdir = theextdir
   
   --Might want to import everything here upfront to prevent any possibility of hanging later!
-  package.path =  extdir .. "PCW/gamemodes/Classic/?.lua;" .. package.path
+  package.path =  world.extdir .. "PCW/gamemodes/Classic/?.lua;" .. package.path
   g = require "Globals"
   i = require "InputMap"
   u = require "Units"
@@ -72,7 +66,7 @@ function init(thegamescreen, thecamera, gamestage, menuactors, thetiledMap, thee
   offX = world.camera.viewportWidth / 2
   offY = world.camera.viewportHeight / 2
   
-  --Map data storage, cellsize acqusition.
+  --Map data storage, cellsize acquisition.
   --Since the range layer always starts off empty, might be a better idea to add it programmatically than force users to add it in maps!
   local prop = tiledMap:getProperties()
   world.map.w = prop:get("width")
@@ -104,23 +98,11 @@ function init(thegamescreen, thecamera, gamestage, menuactors, thetiledMap, thee
     end
   end
   
-  --Create the actions menu for later modification.
-  local vg = world.gamescreen:reflect("com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup", {}, {})
-  mactors:addActor(vg)
-  local fh = world.gamescreen:reflect("com.badlogic.gdx.files.FileHandle", {"String"}, {extdir .. "PCW/menuskins/Glassy/glassy-ui.json"})
-  local skin = world.gamescreen:reflect("com.badlogic.gdx.scenes.scene2d.ui.Skin", {"FileHandle"}, {fh})
-  --You need to dispose of this Skin.
-  --Highly recommend you investigate the AssetManager.
-  --As long as you declared the actions table with integers for keys, ipairs will maintain order while iterating. pairs does not.
-  for i,act in ipairs(world.acts) do
-    --Create a button for each action.
-    local button = world.gamescreen:reflect("com.badlogic.gdx.scenes.scene2d.ui.TextButton", {"String", "Skin"}, {act, skin})
-    world.gamescreen:addChangeListener(button, "printer")
-    vg:addActor(button)
-  end
+  --Initialise unit-related UI.
+  u.UIinit(world)
   
   --The constructor for units should also register them with a list of units.
-  inf1 = u.Infantry(world.gamescreen, g.getCellsize(), 19, 15, world)
+  inf1 = u.Infantry(world.gamescreen, g.getCellsize(), 15, 8, world)
 --  print(world.units[80][48]:getWeps())
   
   world.cursor = Cursor.new(world.gamescreen, g.getCellsize())

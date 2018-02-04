@@ -1,6 +1,35 @@
 require "class"
 local g = require "Globals"
 
+local actiontable
+local actionbuttons = {}
+
+--This table really only has units in it, plus the UIinit function.
+local u = {}
+
+function u.UIinit(world)
+  --Create the actions menu for later modification.
+  --Reflection is relatively slow, so this sort of thing should be done once at the game's start.
+  actiontable = world.gamescreen:reflect("com.badlogic.gdx.scenes.scene2d.ui.Table", {}, {})
+  world.UIstage:addActor(actiontable)
+  actiontable:setFillParent(true)
+  actiontable:top()
+  actiontable:left()
+  actiontable:pad(10)
+--  world.UIcamera.zoom = world.UIcamera.zoom * 2
+  local fh = world.gamescreen:reflect("com.badlogic.gdx.files.FileHandle", {"String"}, {world.extdir .. "PCW/menuskins/Glassy/glassy-ui.json"})
+  local skin = world.gamescreen:reflect("com.badlogic.gdx.scenes.scene2d.ui.Skin", {"FileHandle"}, {fh})
+  --You need to dispose of this Skin.
+  --Highly recommend you investigate the AssetManager.
+  --As long as you declared the actions table with integers for keys, ipairs will maintain order while iterating. pairs does not.
+  for i,act in ipairs(world.acts) do
+    --Create a button for each action.
+    local button = world.gamescreen:reflect("com.badlogic.gdx.scenes.scene2d.ui.TextButton", {"String", "Skin"}, {act, skin})
+    world.gamescreen:addChangeListener(button, "printer") --Bind to an appropriate function.
+    actionbuttons[act] = button --Store button.
+  end
+end
+
 local Unit = class()
 function Unit:init(java, bounds, x, y, world)
   self.actor = java:addLuaActor(self.sprite, 1.0, bounds)
@@ -50,16 +79,19 @@ function Unit:move(x, y)
   --Then move the unit.
   self.actor:setPosition(g.long(x), g.long(y))
 end
-function Unit:showactions()
-  --For each action, add button to vertical column. If action is possible, enable the button.
-  --Provide access to the Scene2D widgets.
-  
-  for i,action in pairs(self.actions) do
-    print(action)
+function Unit:showactions(bool)
+  if bool == true then
+    --For each action the unit can do, add the corresponding button to the action table.
+    for i,action in pairs(self.actions) do
+      actiontable:add(actionbuttons[action])
+      actiontable:row()
+    end
+  else
+    --To undo, just clear the table.
+    actiontable:clearChildren()
   end
-end
 
-local u = {}
+end
 
 u.Infantry = class(Unit)
 function u.Infantry:init(java, bounds, x, y, world)
@@ -71,7 +103,8 @@ function u.Infantry:init(java, bounds, x, y, world)
   self.maxfuel = 99
   self.armour = nil
   local acts = world.acts
-  self.actions = {acts.wait, acts.attack, acts.capture}
+  --Should fix this somehow...
+  self.actions = {acts[1], acts[2], acts[4]}
   self.weps = "rifle"
   --weapon classes...see also godot. instantiate so you can manage ammo.
 

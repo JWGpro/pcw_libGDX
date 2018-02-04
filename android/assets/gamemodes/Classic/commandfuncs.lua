@@ -76,8 +76,8 @@ function f.move(world)
     cell:setTile(nil)
   end
   
-  print("action state")
-  sel.unit:showactions()
+  --Show available actions.
+  sel.unit:showactions(true)
   
 end
 
@@ -107,8 +107,12 @@ function f.undomove(world)
     cell:setTile(world.map.tilesets.rangeSet:getTile(14))
   end
   
+  --Move the unit back.
   sel.state = world.states.MOVE
   sel.unit:move(sel.startX, sel.startY)
+  
+  --Hide available actions.
+  sel.unit:showactions(false)
 end
 
 
