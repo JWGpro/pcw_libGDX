@@ -148,14 +148,17 @@ public class InGameScreen implements Screen, InputProcessor, GestureListener {
         }
     }
 
-    public void addChangeListener(Actor luawidget, String luafunc) {
-        final String func = luafunc;
-        luawidget.addListener(new ChangeListener() {
+    public ChangeListener addChangeListener(Actor luawidget, Object luafunc, Object luaobject) {
+        final Object func = luafunc;
+        final Object obj = luaobject;
+        ChangeListener lis;
+        luawidget.addListener(lis = new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                ScriptManager.executeFunction("Classic", func, event, actor);
+                ScriptManager.executeFunction("Classic", "runlistener", func, obj, event, actor);
             }
         });
+        return lis;
     }
 
     public void toggleMenu(){
@@ -196,10 +199,7 @@ public class InGameScreen implements Screen, InputProcessor, GestureListener {
 
     @Override
     public void resize(int width, int height) {
-        // use true here to center the camera
-        // that's what you probably want in case of a UI
         gameStage.getViewport().update(width, height, false);
-        // how about for UI?
         UIStage.getViewport().update(width, height, false);
 
     }

@@ -23,8 +23,7 @@ world.cursor = nil
 world.panning = false
 local lastX local lastY local offX local offY
 world.states = {DEFAULT = 1, MOVE = 2, ACT = 3, TARGET = 4} --Globals?
---world.acts = {[1] = "Attack"}
-world.acts = {[1] = "Attack", [2] = "Capture", [3] = "Supply", [4] = "Wait", [5] = "Embark"}
+world.acts = {Attack = "Attack", Capture = "Capture", Supply = "Supply", Wait = "Wait", Embark = "Embark"}
 
 --Contains all the state modifiable through the selection process.
 world.selection = {}
@@ -109,8 +108,10 @@ function init(thegamescreen, thecamera, gamestage, theUIcamera, theUIstage, thet
 --  stage:setKeyboardFocus(cursor)
 end
 
-function printer(event, actor)
-  print(event, actor)
+function runlistener(func, object, event, actor)
+  --Runs a listener function (usually from a button) and passes in an object in case it's an instance method.
+  --That's the same as object:func() in that case, but for some reason that doesn't work. Maybe due to how the function is passed?
+  func(object)
 end
 
 function loop(delta)

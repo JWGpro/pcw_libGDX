@@ -3,11 +3,14 @@ local g = require "Globals"
 
 local actiontable
 local actionbuttons = {}
+local buttonlisteners = {}
+local w
 
 --This table really only has units in it, plus the UIinit function.
 local u = {}
 
 function u.UIinit(world)
+  w = world
   --Create the actions menu for later modification.
   --Reflection is relatively slow, so this sort of thing should be done once at the game's start.
   actiontable = world.gamescreen:reflect("com.badlogic.gdx.scenes.scene2d.ui.Table", {}, {})
@@ -22,11 +25,10 @@ function u.UIinit(world)
   --You need to dispose of this Skin.
   --Highly recommend you investigate the AssetManager.
   --As long as you declared the actions table with integers for keys, ipairs will maintain order while iterating. pairs does not.
-  for i,act in ipairs(world.acts) do
+  for act,str in pairs(world.acts) do
     --Create a button for each action.
     local button = world.gamescreen:reflect("com.badlogic.gdx.scenes.scene2d.ui.TextButton", {"String", "Skin"}, {act, skin})
-    world.gamescreen:addChangeListener(button, "printer") --Bind to an appropriate function.
-    actionbuttons[act] = button --Store button.
+    actionbuttons[str] = button --Store button.
   end
 end
 
@@ -67,9 +69,6 @@ end
 function Unit:setFuel(x)
   self.fuel = x
 end
-function Unit:attack(enemy)
-  --what if the unit has no weapon? make sure callers check for weapons, or you could check here...
-end
 function Unit:move(x, y)
   --Kill the existing reference and store a new one.
   self.unitlist[self.x][self.y] = nil
@@ -80,17 +79,37 @@ function Unit:move(x, y)
   self.actor:setPosition(g.long(x), g.long(y))
 end
 function Unit:showactions(bool)
-  if bool == true then
-    --For each action the unit can do, add the corresponding button to the action table.
-    for i,action in pairs(self.actions) do
-      actiontable:add(actionbuttons[action])
+  for i,actionstr in ipairs(self.actions) do
+    --Get the button for each action the unit can do.
+    local button = actionbuttons[actionstr]
+    
+    if bool == true then
+      --Add to the action table, and add a listener to the button.
+      actiontable:add(button)
+      local lis = w.gamescreen:addChangeListener(button, self[actionstr], self) --Bind to the appropriate function.
+      buttonlisteners[button] = lis --Store the listener for later removal.
       actiontable:row()
+    else
+      --To undo, clear the listener from the button (not all listeners, or the button stops working), and clear the table (once).
+      button:removeListener(buttonlisteners[button])
+      if i == 1 then
+        actiontable:clearChildren()
+      end
     end
-  else
-    --To undo, just clear the table.
-    actiontable:clearChildren()
   end
+end
 
+function Unit:Attack()
+  --what if the unit has no weapon? make sure callers check for weapons, or you could check here...
+  print(self.cost, self.x)
+end
+
+function Unit:Capture()
+  print("capture!")
+end
+
+function Unit:Wait()
+  print("wait!")
 end
 
 u.Infantry = class(Unit)
@@ -103,8 +122,7 @@ function u.Infantry:init(java, bounds, x, y, world)
   self.maxfuel = 99
   self.armour = nil
   local acts = world.acts
-  --Should fix this somehow...
-  self.actions = {acts[1], acts[2], acts[4]}
+  self.actions = {[1] = acts.Attack, [2] = acts.Capture, [3] = acts.Wait}
   self.weps = "rifle"
   --weapon classes...see also godot. instantiate so you can manage ammo.
 
