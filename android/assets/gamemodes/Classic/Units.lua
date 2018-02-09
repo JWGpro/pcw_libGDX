@@ -4,13 +4,15 @@ local g = require "Globals"
 local actiontable
 local actionbuttons = {}
 local buttonlisteners = {}
-local w
+local gs
+local unitlist
 
 --This table really only has units in it, plus the UIinit function.
 local u = {}
 
 function u.UIinit(world)
-  w = world
+  gs = world.gamescreen
+  unitlist = world.units
   --Create the actions menu for later modification.
   --Reflection is relatively slow, so this sort of thing should be done once at the game's start.
   actiontable = world.gamescreen:reflect("com.badlogic.gdx.scenes.scene2d.ui.Table", {}, {})
@@ -35,11 +37,8 @@ end
 local Unit = class()
 function Unit:init(java, bounds, x, y, world)
   self.actor = java:addLuaActor(self.sprite, 1.0, bounds)
-  --Store the unit list for later access.
-  --...Are there going to be multiple references to this when you only need one?
-  self.unitlist = world.units
   --Store the unit by coordinates, storing the coordinates for later lookup.
-  self.unitlist[x][y] = self
+  unitlist[x][y] = self
   self.x = x
   self.y = y
   --Place the unit.
@@ -71,8 +70,8 @@ function Unit:setFuel(x)
 end
 function Unit:move(x, y)
   --Kill the existing reference and store a new one.
-  self.unitlist[self.x][self.y] = nil
-  self.unitlist[x][y] = self
+  unitlist[self.x][self.y] = nil
+  unitlist[x][y] = self
   self.x = x
   self.y = y
   --Then move the unit.
@@ -86,7 +85,7 @@ function Unit:showactions(bool)
     if bool == true then
       --Add to the action table, and add a listener to the button.
       actiontable:add(button)
-      local lis = w.gamescreen:addChangeListener(button, self[actionstr], self) --Bind to the appropriate function.
+      local lis = gs:addChangeListener(button, self[actionstr], self) --Bind to the appropriate function.
       buttonlisteners[button] = lis --Store the listener for later removal.
       actiontable:row()
     else
@@ -101,6 +100,7 @@ end
 
 function Unit:Attack()
   --what if the unit has no weapon? make sure callers check for weapons, or you could check here...
+  --the button won't even appear if the unit has no weapon. because moreover, the unit won't have that action in its list.
   print(self.cost, self.x)
 end
 
@@ -108,8 +108,42 @@ function Unit:Capture()
   print("capture!")
 end
 
+function Unit:Supply()
+  print("supply!")
+end
+
 function Unit:Wait()
   print("wait!")
+end
+
+function Unit:Board()
+  print("board!")
+end
+
+local wep = {}
+
+local Weapon = class()
+function Weapon:init()
+  --Default constructor for a typical direct fire weapon.
+  --Weapons that have no ammo can actually be static.
+  --Actually, wouldn't that make most of these static variables or something? So how would I do that?
+  self.direct = true
+  self.minrange = 1
+  self.maxrange = 1
+  --name
+  --damage
+  --dtype
+  --maxammo
+  self.ammo = self.maxammo
+end
+wep.Rifle = class(Weapon)
+function wep.Rifle:init()
+  self.name = "Rifle"
+  self.damage = 60
+  self.dtype = "rifle"
+  self.maxammo = nil
+  Weapon.init(self)
+--  self.direct = false
 end
 
 u.Infantry = class(Unit)
@@ -123,7 +157,7 @@ function u.Infantry:init(java, bounds, x, y, world)
   self.armour = nil
   local acts = world.acts
   self.actions = {[1] = acts.Attack, [2] = acts.Capture, [3] = acts.Wait}
-  self.weps = "rifle"
+  self.weps = {[1] = wep.Rifle()}
   --weapon classes...see also godot. instantiate so you can manage ammo.
 
   Unit.init(self, java, bounds, x, y, world)

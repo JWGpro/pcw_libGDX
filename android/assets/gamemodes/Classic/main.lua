@@ -1,5 +1,6 @@
 --At some point I'll have to put a list of methods, and objects, or how to find them in the libGDX API reference.
 --Code completion doesn't really work here for them, lol.
+--"Attempt to call table" could mean you are trying to do "for k,v in table" - you need pairs(table) or ipairs(table).
 
 --Everything should use short coords where possible.
 --They need to be converted to long for passing to actors. Could override the Java method, but you'd have to do it with a cellsize param.
@@ -23,13 +24,14 @@ world.cursor = nil
 world.panning = false
 local lastX local lastY local offX local offY
 world.states = {DEFAULT = 1, MOVE = 2, ACT = 3, TARGET = 4} --Globals?
-world.acts = {Attack = "Attack", Capture = "Capture", Supply = "Supply", Wait = "Wait", Embark = "Embark"}
+world.acts = {Attack = "Attack", Capture = "Capture", Supply = "Supply", Wait = "Wait", Board = "Board"}
 
 --Contains all the state modifiable through the selection process.
 world.selection = {}
 local sel = world.selection
 sel.state = world.states.DEFAULT
-sel.rangetiles = {}
+sel.mrangetiles = {}
+sel.arangetiles = {}
 --[[ And these uninitialised variables:
 sel.unit
 sel.startX
@@ -91,9 +93,11 @@ function init(thegamescreen, thecamera, gamestage, theUIcamera, theUIstage, thet
   for x=0, world.map.w do
     world.units[x] = {}
     for y=0, world.map.h do
-      --Also instantiate Cells for the range layer.
-      local cell = world.gamescreen:newCell()
-      world.map.layers.range:setCell(x, y, cell)
+      --Also instantiate Cells for the range layers.
+      local cellM = world.gamescreen:newCell()
+      world.map.layers.Mrange:setCell(x, y, cellM)
+      local cellA = world.gamescreen:newCell()
+      world.map.layers.Arange:setCell(x, y, cellA)
     end
   end
   
@@ -101,7 +105,10 @@ function init(thegamescreen, thecamera, gamestage, theUIcamera, theUIstage, thet
   u.UIinit(world)
   
   --The constructor for units should also register them with a list of units.
-  inf1 = u.Infantry(world.gamescreen, g.getCellsize(), 15, 8, world)
+  local inf1 = u.Infantry(world.gamescreen, g.getCellsize(), 0, 0, world)
+  local inf2 = u.Infantry(world.gamescreen, g.getCellsize(), 10, 10, world)
+  local inf3 = u.Infantry(world.gamescreen, g.getCellsize(), 15, 15, world)
+  local inf4 = u.Infantry(world.gamescreen, g.getCellsize(), 49, 49, world)
 --  print(world.units[80][48]:getWeps())
   
   world.cursor = Cursor.new(world.gamescreen, g.getCellsize())

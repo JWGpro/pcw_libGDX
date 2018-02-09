@@ -37,4 +37,48 @@ function g.mandist(x, y)
   return dist
 end
 
+function g.clampMin(n, min)
+  if n < min then
+    return min
+  else
+    return n
+  end
+end
+
+function g.clampMax(n, max)
+  if n > max then
+    return max
+  else
+    return n
+  end
+end
+
+function g.manrange(startX, startY, mapw, maph, minrange, maxrange)
+  --Returns the Manhattan or Taxicab "circle" range from a starting x/y, clamping within a map w/h, taking into account minimum range.
+  --Used to get ranges, e.g. for movement and attack.
+  --The x and y coordinates of the map may be different, but this function assumes the origin is always 0,0.
+  local cells = {}
+  
+  --Sets the initial x bounds to between +/- maxrange (clamped within the map).
+  local minX = g.clampMin(startX - maxrange, 0)
+  local maxX = g.clampMax(startX + maxrange, mapw - 1)
+
+  for x=minX,maxX do
+    local xr = math.abs(startX - x)
+    local yrange = maxrange - xr
+    --Sets the y bounds to whatever is left of the range after traversing x (again clamped within the map).
+    local minY = g.clampMin(startY - yrange, 0)
+    local maxY = g.clampMax(startY + yrange, maph - 1)
+    for y=minY,maxY do
+      local yr = math.abs(startY - y)
+      --Proceed if Manhattan distance >= minrange.
+      if (xr + yr) >= minrange then
+        --Store the coordinates of the valid cell.
+        table.insert(cells, {x,y})
+      end
+    end
+  end
+  return cells
+end
+
 return g
