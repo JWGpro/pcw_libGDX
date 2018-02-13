@@ -5,14 +5,14 @@ local actiontable
 local actionbuttons = {}
 local buttonlisteners = {}
 local gs
-local unitlist
+local grid
 
 --This table really only has units in it, plus the UIinit function.
 local u = {}
 
 function u.UIinit(world)
   gs = world.gamescreen
-  unitlist = world.units
+  grid = world.grid
   --Create the actions menu for later modification.
   --Reflection is relatively slow, so this sort of thing should be done once at the game's start.
   actiontable = world.gamescreen:reflect("com.badlogic.gdx.scenes.scene2d.ui.Table", {}, {})
@@ -37,8 +37,11 @@ end
 local Unit = class()
 function Unit:init(java, bounds, x, y, world)
   self.actor = java:addLuaActor(self.sprite, 1.0, bounds)
-  --Store the unit by coordinates, storing the coordinates for later lookup.
-  unitlist[x][y] = self
+  --Store the unit reference twice:
+  -- once by coordinates, enabling direct lookup in the existing 2D array, and again in a simple list for iteration.
+  grid[x][y].unit = self
+  table.insert(world.units, self)
+  --Store the coordinates as well.
   self.x = x
   self.y = y
   --Place the unit.
@@ -70,8 +73,8 @@ function Unit:setFuel(x)
 end
 function Unit:move(x, y)
   --Kill the existing reference and store a new one.
-  unitlist[self.x][self.y] = nil
-  unitlist[x][y] = self
+  grid[self.x][self.y].unit = nil
+  grid[x][y].unit = self
   self.x = x
   self.y = y
   --Then move the unit.
@@ -144,13 +147,27 @@ function wep.Rifle:init()
   self.maxammo = nil
   Weapon.init(self)
 --  self.direct = false
+--  self.minrange = 3
+--  self.maxrange = 5
+end
+
+wep.Missile = class(Weapon)
+function wep.Missile:init()
+  self.name = "Missile"
+  self.damage = 100
+  self.dtype = "missile"
+  self.maxammo = 9
+  Weapon.init(self)
+  self.direct = false
+  self.minrange = 3
+  self.maxrange = 5
 end
 
 u.Infantry = class(Unit)
 function u.Infantry:init(java, bounds, x, y, world)
   self.sprite = "PCW/unit_sprites/Default/inf_red_1.png"
   self.cost = 1000
-  self.moves = 3
+  self.moves = 9
   self.movetype = nil
   self.maxhp = 100
   self.maxfuel = 99

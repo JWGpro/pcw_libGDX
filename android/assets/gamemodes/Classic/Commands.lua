@@ -105,6 +105,17 @@ function c.Menu:execute(world)
   print("menu toggled")
 end
 
+c.RangeAllOn = class(Command)
+function c.RangeAllOn:execute(world)
+  for k,unit in pairs(world.units) do
+    print(unit)
+  end
+end
+
+c.RangeAllOff = class(Command)
+function c.RangeAllOff:execute(world)
+  --clear tiles
+end
 
 --[[
 "make sure every data modification goes through a command"

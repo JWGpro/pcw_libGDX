@@ -5,17 +5,16 @@ local f = {}
 function f.select(world)
   --Lookup the cursor position in the unit list to return any unit there.
   local cur = world.cursor.actor
-  local x = g.short(cur:getX())
-  local y = g.short(cur:getY())
+  local curx = g.short(cur:getX())
+  local cury = g.short(cur:getY())
   --At the moment, this will return an "attempt to index nil" error if you call it beyond the bounds of the map.
   --But at some point I should have it so you can't see beyond the map anyway.
-  local unit = world.units[x][y]
+  local unit = world.grid[curx][cury].unit
   
   --Stop if there's no unit.
   if unit == nil then return end
   
-  --Select unit.
-  --Set state and store unit.
+  --Select unit - set state and store unit.
   local sel = world.selection
   sel.state = world.states.MOVE
   sel.unit = unit
@@ -46,31 +45,32 @@ function f.select(world)
     sel.mrangetiles[xy] = cell --Store for later retrieval and clearance.
   end
   
+  --By the way, if friendly units are in the way, you won't be able to stop and attack from there.
+  --Possible you could just cut the below logic into the above.
+  
   --Check attack range (if unit has weapons).
   if sel.unit.weps ~= nil then
     --Iterate over weapons.
     for i,wep in pairs(sel.unit.weps) do
-      --Handle deployed weapons first.
-      if not wep.direct then
-        --Get the range from the starting position.
-        local acells = g.manrange(sel.startX, sel.startY, world.map.w, world.map.h, wep.minrange, wep.maxrange)
-        --Tile the cells.
-        for i,vec in pairs(acells) do
-          local cell = world.map.layers.Arange:getCell(vec[1], vec[2])
-          cell:setTile(world.map.tilesets.ArangeSet:getTile(16)) --Attack range tile.
-          sel.arangetiles[vec] = cell
-        end
-      --Now handle direct weapons.
-      else
-        --Iterate over the movement range cells.
-        for xy,v in pairs(sel.mrangetiles) do
-          --Get the range from each movement cell.
-          local bcells = g.manrange(xy[1], xy[2], world.map.w, world.map.h, wep.minrange, wep.maxrange)
-          --Tile the cells.
-          for i,vec in pairs(bcells) do
+      --Iterate over the movement range cells.
+      for xy,v in pairs(sel.mrangetiles) do
+        --Proceed if weapon is direct, or cell is the starting location (for indirect weapons).
+        if wep.direct or (xy[1] == sel.startX and xy[2] == sel.startY) then
+          --New table for targets from this cell. One for each valid movement cell.
+          world.grid[xy[1]][xy[2]].targets = {}
+          --Get the attack range from the movement cell.
+          local acells = g.manrange(xy[1], xy[2], world.map.w, world.map.h, wep.minrange, wep.maxrange)
+          --Iterate over attack range cells.
+          for i,vec in pairs(acells) do
+            --Tile cell.
             local cell = world.map.layers.Arange:getCell(vec[1], vec[2])
             cell:setTile(world.map.tilesets.ArangeSet:getTile(16)) --Attack range tile.
             sel.arangetiles[vec] = cell
+            --Get target and add it to the table.
+            local target = world.grid[vec[1]][vec[2]].unit
+            if target ~= nil then
+              table.insert(world.grid[xy[1]][xy[2]].targets, target)
+            end
           end
         end
       end
@@ -109,11 +109,11 @@ function f.move(world)
   --Evaluate and show available actions.
   
   --Attack:
-  --Check if there are targets in the attack range cells, then evaluate whether they are targetable.
-  
-  --also check if sel.unit.x == sel.unit.startX for direct weapons.
-  --check each range cell for an enemy, because range is finite whereas enemies may be infinite.
-  --UAV still has a range.
+  --This assumes the unit has a weapon at all, otherwise targets will be nil and needs to be checked - but forget this for now.
+  if #world.grid[x][y].targets > 0 then
+    print("now i will show the attack button")
+    --sel.unit:showaction(attack)
+  end
   
   --if supplyable allies in range, show supply.
   --if on capturable building, show capture.
@@ -126,9 +126,10 @@ end
 function f.undoselect(world)
   local sel = world.selection
   
-  --Clearing range tiles (and table) permanently.
-  for i,cell in pairs(sel.mrangetiles) do
+  --Clearing range tiles (and table) permanently, along with targets.
+  for xy,cell in pairs(sel.mrangetiles) do
     cell:setTile(nil)
+    world.grid[xy[1]][xy[2]].targets = nil
   end
   sel.mrangetiles = {} --Hope this frees the memory.
   for i,cell in pairs(sel.arangetiles) do

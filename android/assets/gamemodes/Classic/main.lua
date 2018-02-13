@@ -18,13 +18,14 @@ local u
 
 local world = {}
 
+world.grid = {}
 world.units = {}
 world.map = {}
 world.cursor = nil
 world.panning = false
 local lastX local lastY local offX local offY
 world.states = {DEFAULT = 1, MOVE = 2, ACT = 3, TARGET = 4} --Globals?
-world.acts = {Attack = "Attack", Capture = "Capture", Supply = "Supply", Wait = "Wait", Board = "Board"}
+world.acts = {Attack = "Attack", Capture = "Capture", Supply = "Supply", Wait = "Wait", Board = "Board", Deploy = "Deploy"}
 
 --Contains all the state modifiable through the selection process.
 world.selection = {}
@@ -38,6 +39,7 @@ sel.startX
 sel.startY
 sel.maxmoves
 sel.movesleft
+sel.targets
 ]]--
 
 --Command history.
@@ -89,10 +91,11 @@ function init(thegamescreen, thecamera, gamestage, theUIcamera, theUIstage, thet
     world.map.tilesets[setname] = set --Stores a TiledMapTileSet object under its name.
   end
   
-  --Store some x-coordinate tables for convenience so the Unit constructor doesn't have to make any.
+  --Create the map grid, in which units, tiles, targets etc. can be stored.
   for x=0, world.map.w do
-    world.units[x] = {}
+    world.grid[x] = {}
     for y=0, world.map.h do
+      world.grid[x][y] = {}
       --Also instantiate Cells for the range layers.
       local cellM = world.gamescreen:newCell()
       world.map.layers.Mrange:setCell(x, y, cellM)
@@ -109,7 +112,7 @@ function init(thegamescreen, thecamera, gamestage, theUIcamera, theUIstage, thet
   local inf2 = u.Infantry(world.gamescreen, g.getCellsize(), 10, 10, world)
   local inf3 = u.Infantry(world.gamescreen, g.getCellsize(), 15, 15, world)
   local inf4 = u.Infantry(world.gamescreen, g.getCellsize(), 49, 49, world)
---  print(world.units[80][48]:getWeps())
+--  print(world.grid[80][48]:getWeps())
   
   world.cursor = Cursor.new(world.gamescreen, g.getCellsize())
 --  stage:setKeyboardFocus(cursor)
@@ -139,7 +142,11 @@ function keyDown(keycode)
 end
 
 function keyUp(keycode)
-  --Not used...
+  local command = i.keyUp[keycode]
+  if command ~= nil then
+    command():execute(world)
+    table.insert(history, command)
+  end
 end
 
 function keyTyped(character)
