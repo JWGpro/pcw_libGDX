@@ -2,14 +2,81 @@ local g = require "Globals"
 
 local f = {}
 
+local actiontable
+local actionbuttons = {}
+local actions = {}
+
+function f.UIinit(world)
+  gs = world.gamescreen
+  --Create the actions menu for later modification.
+  --Reflection is relatively slow, so this sort of thing should be done once at the game's start.
+  actiontable = world.gamescreen:reflect("com.badlogic.gdx.scenes.scene2d.ui.Table", {}, {})
+  world.UIstage:addActor(actiontable)
+  actiontable:setFillParent(true)
+  actiontable:top()
+  actiontable:left()
+  actiontable:pad(10)
+--  world.UIcamera.zoom = world.UIcamera.zoom * 2
+  local fh = world.gamescreen:reflect("com.badlogic.gdx.files.FileHandle", {"String"}, {world.extdir .. "PCW/menuskins/Glassy/glassy-ui.json"})
+  local skin = world.gamescreen:reflect("com.badlogic.gdx.scenes.scene2d.ui.Skin", {"FileHandle"}, {fh})
+  --You need to dispose of this Skin.
+  --Highly recommend you investigate the AssetManager.
+  --As long as you declared the actions table with integers for keys, ipairs will maintain order while iterating. pairs does not.
+  for act,str in pairs(world.acts) do
+    --Create a button for each action.
+    local button = world.gamescreen:reflect("com.badlogic.gdx.scenes.scene2d.ui.TextButton", {"String", "Skin"}, {act, skin})
+    --Store button.
+    actionbuttons[str] = button
+    --Add listener to a function here.
+    world.gamescreen:addChangeListener(button, actions[str], world)
+  end
+end
+local function showaction(action)
+  --Get button.
+  local button = actionbuttons[action]
+  --Add to table.
+  actiontable:add(button)
+  --Next row.
+  actiontable:row()
+end
+local function clearactions()
+  actiontable:clearChildren()
+end
+function actions.Attack(world)
+  print("at")
+  --set state to TARGET
+  --show targets over targets and possibly attack range from cell too.
+  --listen for a Select:TARGET command.
+end
+function actions.Capture(world)
+  --building:capture(unit.hp)
+end
+function actions.Supply(world)
+  --for ally in pairs(allies) do ally:resupply() end
+end
+function actions.Wait(world)
+  local sel = world.selection
+  sel.unit:burnfuel(sel.maxmoves - sel.movesleft)
+  print("Fuel now: " .. sel.unit:getFuel())
+  --Reset state.
+  f.undoselect(world)
+  clearactions()
+end
+function actions.Board(world)
+  --board animation, set not visible, destunit:take(self)
+end
+function actions.Deploy(world)
+  --not sure yet, probably similar to Base code.
+end
+
 function f.select(world)
   --Lookup the cursor position in the unit list to return any unit there.
   local cur = world.cursor.actor
-  local curx = g.short(cur:getX())
-  local cury = g.short(cur:getY())
+  local x = g.short(cur:getX())
+  local y = g.short(cur:getY())
   --At the moment, this will return an "attempt to index nil" error if you call it beyond the bounds of the map.
   --But at some point I should have it so you can't see beyond the map anyway.
-  local unit = world.grid[curx][cury].unit
+  local unit = world.grid[x][y].unit
   
   --Stop if there's no unit.
   if unit == nil then return end
@@ -106,20 +173,24 @@ function f.move(world)
     cell:setTile(nil)
   end
   
+  --temporary: track moves for fuel.
+  sel.movesleft = sel.movesleft - g.mandist(sel.startX - x, sel.startY - y)
+  
   --Evaluate and show available actions.
   
   --Attack:
   --This assumes the unit has a weapon at all, otherwise targets will be nil and needs to be checked - but forget this for now.
   if #world.grid[x][y].targets > 0 then
-    print("now i will show the attack button")
-    --sel.unit:showaction(attack)
+    showaction(world.acts.Attack)
   end
   
   --if supplyable allies in range, show supply.
   --if on capturable building, show capture.
+  
   --if on boardable unit, show board, otherwise wait. (not mutually exclusive with above.)
-  --Show available actions.
-  sel.unit:showactions(true)
+  if true then
+    showaction(world.acts.Wait)
+  end
   
 end
 
@@ -127,6 +198,8 @@ function f.undoselect(world)
   local sel = world.selection
   
   --Clearing range tiles (and table) permanently, along with targets.
+  --Having selection modify a state that isn't in world.selection is probably a bad idea, because it's confusing.
+  --Maybe it'd be better to have a separate 2D array; world.selection.targetsgrid.
   for xy,cell in pairs(sel.mrangetiles) do
     cell:setTile(nil)
     world.grid[xy[1]][xy[2]].targets = nil
@@ -162,8 +235,13 @@ function f.undomove(world)
   sel.unit:move(sel.startX, sel.startY)
   
   --Hide actions.
-  sel.unit:showactions(false)
+  clearactions()
 end
 
+function f.undotarget(world)
+  local sel = world.selection
+  print("undo target")
+  sel.state = world.states.ACT
+end
 
 return f

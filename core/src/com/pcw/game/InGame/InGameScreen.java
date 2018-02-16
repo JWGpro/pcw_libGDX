@@ -149,6 +149,7 @@ public class InGameScreen implements Screen, InputProcessor, GestureListener {
     }
 
     public ChangeListener addChangeListener(Actor luawidget, Object luafunc, Object luaobject) {
+        // You can pass an object in from Lua if you want to use a method on it; button, self[doX], self.
         final Object func = luafunc;
         final Object obj = luaobject;
         ChangeListener lis;

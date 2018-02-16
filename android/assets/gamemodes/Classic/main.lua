@@ -15,6 +15,7 @@
 local g
 local i
 local u
+local f
 
 local world = {}
 
@@ -39,7 +40,6 @@ sel.startX
 sel.startY
 sel.maxmoves
 sel.movesleft
-sel.targets
 ]]--
 
 --Command history.
@@ -63,6 +63,7 @@ function init(thegamescreen, thecamera, gamestage, theUIcamera, theUIstage, thet
   g = require "Globals"
   i = require "InputMap"
   u = require "Units"
+  f = require "commandfuncs"
   require "Cursor"
   
   world.camera.zoom = 0.5
@@ -105,7 +106,7 @@ function init(thegamescreen, thecamera, gamestage, theUIcamera, theUIstage, thet
   end
   
   --Initialise unit-related UI.
-  u.UIinit(world)
+  f.UIinit(world)
   
   --The constructor for units should also register them with a list of units.
   local inf1 = u.Infantry(world.gamescreen, g.getCellsize(), 0, 0, world)
