@@ -20,26 +20,26 @@ local f
 local world = {}
 
 world.grid = {}
-world.units = {}
 world.map = {}
 world.cursor = nil
 world.panning = false
 local lastX local lastY local offX local offY
 world.states = {DEFAULT = 1, MOVE = 2, ACT = 3, TARGET = 4} --Globals?
-world.acts = {Attack = "Attack", Capture = "Capture", Supply = "Supply", Wait = "Wait", Board = "Board", Deploy = "Deploy"}
+world.acts = {Attack = "Attack", Capture = "Capture", Supply = "Supply", Wait = "Wait", Board = "Board", Deploy = "Deploy", Unload = "Unload", Join = "Join"}
 
 --Contains all the state modifiable through the selection process.
 world.selection = {}
 local sel = world.selection
 sel.state = world.states.DEFAULT
 sel.mrangetiles = {}
+sel.boardabletiles = {}
+sel.passagetiles = {}
 sel.arangetiles = {}
 --[[ And these uninitialised variables:
+sel.players = nil
+sel.player = nil
+sel.teamunits = nil
 sel.unit
-sel.startX
-sel.startY
-sel.maxmoves
-sel.movesleft
 ]]--
 
 --Command history.
@@ -49,22 +49,32 @@ sel.movesleft
 --The replay may need each Command to self. the world as a snapshot, or snapshot by other means.
 local history = {}
 
-function init(thegamescreen, thecamera, gamestage, theUIcamera, theUIstage, thetiledMap, theextdir)
-  world.gamescreen = thegamescreen
-  world.camera = thecamera
-  local gstage = gamestage
-  world.UIcamera = theUIcamera
-  world.UIstage = theUIstage
-  local tiledMap = thetiledMap --TiledMap object.
-  world.extdir = theextdir
+function init(gameScreen, gameCamera, gameStage, uiCamera, uiStage, tiledMap, externalDir, inputKeys, inputButtons)
+  world.gamescreen = gameScreen
+  world.camera = gameCamera
+  local gstage = gameStage
+  world.UIcamera = uiCamera
+  world.UIstage = uiStage
+  local tiledmap = tiledMap --TiledMap object.
+  world.extdir = externalDir
+  --inputKeys
+  --inputButtons
   
   --Might want to import everything here upfront to prevent any possibility of hanging later!
   package.path =  world.extdir .. "PCW/gamemodes/Classic/?.lua;" .. package.path
   g = require "Globals"
   i = require "InputMap"
-  u = require "Units"
   f = require "commandfuncs"
   require "Cursor"
+  
+  sel.players = {g.teams.Red, g.teams.Blue}
+  sel.player = sel.players[1]
+  -- Create a list of units for each team.
+  sel.teamunits = {}
+  for i,v in ipairs(sel.players) do
+    sel.teamunits[v] = {}
+  end
+  g.teamunits = sel.teamunits
   
   world.camera.zoom = 0.5
   offX = world.camera.viewportWidth / 2
@@ -72,13 +82,14 @@ function init(thegamescreen, thecamera, gamestage, theUIcamera, theUIstage, thet
   
   --Map data storage, cellsize acquisition.
   --Since the range layer always starts off empty, might be a better idea to add it programmatically than force users to add it in maps!
-  local prop = tiledMap:getProperties()
+  local prop = tiledmap:getProperties()
   world.map.w = prop:get("width")
   world.map.h = prop:get("height")
   g.setCellsize(prop:get("tilewidth")) --Assumes that width and height are identical!
-  local layers = tiledMap:getLayers() --MapLayers object. Returned with the Map method, getLayers().
+--  g.cellsize = prop:get("tilewidth") --WHY DOESN'T THIS WORK???
+  local layers = tiledmap:getLayers() --MapLayers object. Returned with the Map method, getLayers().
   local layercount = layers:getCount()
-  local sets = tiledMap:getTileSets() --TiledMapTileSets object.
+  local sets = tiledmap:getTileSets() --TiledMapTileSets object.
   --NOTE: You can get tiles straight from the TiledMapTileSets object, with the "firstgid". This shit is just broken though. How will I make maps?
   world.map.layers = {}
   world.map.tilesets = {}
@@ -93,9 +104,9 @@ function init(thegamescreen, thecamera, gamestage, theUIcamera, theUIstage, thet
   end
   
   --Create the map grid, in which units, tiles, targets etc. can be stored.
-  for x=0, world.map.w do
+  for x=0, world.map.w - 1 do
     world.grid[x] = {}
-    for y=0, world.map.h do
+    for y=0, world.map.h - 1 do
       world.grid[x][y] = {}
       --Also instantiate Cells for the range layers.
       local cellM = world.gamescreen:newCell()
@@ -104,16 +115,19 @@ function init(thegamescreen, thecamera, gamestage, theUIcamera, theUIstage, thet
       world.map.layers.Arange:setCell(x, y, cellA)
     end
   end
+  g.grid = world.grid  --Just a reference...
+  g.gamescreen = world.gamescreen
   
   --Initialise unit-related UI.
   f.UIinit(world)
   
-  --The constructor for units should also register them with a list of units.
-  local inf1 = u.Infantry(world.gamescreen, g.getCellsize(), 0, 0, world)
-  local inf2 = u.Infantry(world.gamescreen, g.getCellsize(), 10, 10, world)
-  local inf3 = u.Infantry(world.gamescreen, g.getCellsize(), 15, 15, world)
-  local inf4 = u.Infantry(world.gamescreen, g.getCellsize(), 49, 49, world)
---  print(world.grid[80][48]:getWeps())
+  u = require "Units"
+  
+  local inf1 = u.Infantry(12, 12, g.teams.Blue)
+  local inf2 = u.Infantry(16, 16, g.teams.Blue)
+  local inf3 = u.Infantry(15, 15, g.teams.Red)
+  local apc1 = u.APC(16, 15, g.teams.Red)
+  local inf4 = u.Infantry(49, 49, g.teams.Red)
   
   world.cursor = Cursor.new(world.gamescreen, g.getCellsize())
 --  stage:setKeyboardFocus(cursor)

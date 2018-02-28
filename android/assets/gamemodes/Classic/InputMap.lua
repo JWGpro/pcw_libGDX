@@ -10,6 +10,7 @@ i.keyDown[4] = c.Cancel --Android back button.
 i.keyDown[41] = c.Menu --M
 i.keyDown[44] = c.PrintCoord --P
 i.keyDown[46] = c.RangeAllOn --R
+i.keyDown[33] = c.NextTurn --E
 
 i.keyUp = {}
 i.keyUp[46] = c.RangeAllOff --R

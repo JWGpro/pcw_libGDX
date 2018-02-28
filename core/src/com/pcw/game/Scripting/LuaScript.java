@@ -11,6 +11,10 @@ import org.luaj.vm2.lib.jse.*;
 
 import com.badlogic.gdx.Gdx;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.StringReader;
+
 /*
  *  Lua script file loader and function executer
  */
@@ -50,7 +54,7 @@ public class LuaScript implements Script {
             chunk = globals.load(Gdx.files.external(scriptFileName).readString());
         } catch (LuaError e) {
             // If reading the file fails, then log the error to the console
-            Gdx.app.log("Debug", "LUA ERROR! " + e.getMessage());
+            Gdx.app.log("Debug", "LUA LOAD ERROR! " + e.getMessage());
             this.scriptFileExists = false;
             return false;
         }
@@ -109,7 +113,24 @@ public class LuaScript implements Script {
                 lastResults = luaFunction.invoke(parameters);
             } catch (LuaError e) {
                 // Log the error to the console if failed
-                Gdx.app.log("Debug", "LUA ERROR! " + e.getMessage());
+
+                // Get the last line of the message since it sometimes dumps the whole of the main script file
+                //  (e.g. as a result of syntax errors).
+                String line;
+                String lastline = "";
+                BufferedReader input = new BufferedReader(new StringReader(e.getMessage()));
+
+                try {
+                    while ((line = input.readLine()) != null) {
+                        lastline = line;
+                    }
+                }
+                catch (IOException ie) {
+                    // This should actually never happen but BufferedReader wants it anyway.
+                    ie.printStackTrace();
+                }
+
+                Gdx.app.log("Debug", "LUA EXECUTE ERROR! " + lastline);
                 return false;
             }
             return true;

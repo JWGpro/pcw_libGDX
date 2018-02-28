@@ -25,7 +25,8 @@ function c.Select:execute(world)
     --Select action.
     --Possibly defer to Scene2D buttons...but you will need to select them with keys too.
   elseif state == s.TARGET then
-    --Select target.
+    --Select target and attack it.
+    f.target(world)
   end
   
 end
@@ -42,7 +43,8 @@ function c.Select:undo(world)
     --Undo the movement.
     f.undomove(world)
   elseif state == s.TARGET then
-    --Undo the action.
+    --Undo the attack command.
+    f.undoattack(world)
   end
 end
 
@@ -115,6 +117,18 @@ end
 c.RangeAllOff = class(Command)
 function c.RangeAllOff:execute(world)
   --clear tiles
+end
+
+c.NextTurn = class(Command)
+function c.NextTurn:execute(world)
+  local sel = world.selection
+  -- Restore the units of the current player.
+  for i,unit in ipairs(sel.teamunits[sel.player]) do
+    unit:restore()
+  end
+  -- Cycle control.
+  sel.player = g.next(sel.players, sel.player)
+  print("It's " .. sel.player .. "'s turn!")
 end
 
 --[[
