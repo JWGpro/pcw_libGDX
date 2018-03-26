@@ -61,8 +61,17 @@ public class InGameScreen implements Screen, InputProcessor, GestureListener {
 
         // Initialise game mode script.
         scriptmanager = new ScriptManager();
-        scriptmanager.executeInit("Classic", this, gameCamera, gameStage, UICamera, UIStage, tiledMap,
-                Gdx.files.getExternalStoragePath(), Input.Keys.class, Input.Buttons.class);
+        scriptmanager.executeInit("Classic",
+                this,
+                gameCamera,
+                gameStage,
+                UICamera,
+                UIStage,
+                tiledMap,
+                Gdx.files.getExternalStoragePath(),
+                Input.Keys.class,
+                Input.Buttons.class
+        );
 
         // Set input processor to allow the argument to receive input events.
         // If you pass "stage", any stage.addListener stuff works, and Actor actions work.
@@ -80,8 +89,8 @@ public class InGameScreen implements Screen, InputProcessor, GestureListener {
         return new TiledMapTileLayer.Cell();
     }
 
-    public MapActor addLuaActor(String spritedir, Float alphaval, Float bound){
-        MapActor luaActor = new MapActor(spritedir, alphaval, bound);
+    public MapActor addLuaActor(String spritedir, Float alphaval){
+        MapActor luaActor = new MapActor(spritedir, alphaval);
         gameStage.addActor(luaActor);
         return luaActor;
     }

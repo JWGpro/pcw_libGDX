@@ -1,17 +1,13 @@
-Cursor = {}
-Cursor.__index = Cursor
+require "class"
+local g = require "Globals"
 
-function Cursor.new(gamescreen, cellsize)
-  local self = setmetatable({}, Cursor)
-  
+local u = {}
+
+u.Cursor = class()
+function u.Cursor:init(java)
   self.sprite = "PCW/ui_sprites/Default/1.png"
-  self.actor = gamescreen:addLuaActor(self.sprite, 1.0, cellsize)
-  
-  return self
+  self.actor = java:addLuaActor(self.sprite, 1.0)
+  self.actor:setPosition(0, 0)
 end
 
--- The cursor is just an animated sprite. It changes position based on mouse movement and changes animation based on state.
-
--- You can have a custom mouse cursor if you want too.
-
--- Features of the class: Texture/Sprite. InputListener.
+return u

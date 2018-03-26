@@ -1,39 +1,43 @@
 require "class"
 local g = require "Globals"
-local f = require "commandfuncs"
 
-local java = g.gamescreen
-local bounds = g.cellsize
-local grid = g.grid
-local units = g.teamunits
+local java
+local map
+local teamunits
 
+-- This doesn't really hold anything permanently. It's used to help push statics into classes, then wiped.
 local statics = {}
 
-local u = {}
+local u = {}  -- Public.
+
+function u.init(gameScreen, theMap, teamUnits)
+  java = gameScreen
+  map = theMap
+  teamunits = teamUnits
+end
 
 local Unit = class()
 function Unit:init(x, y, teamID)
-  self.actor = java:addLuaActor(self.sprite, 1.0, bounds)
-  -- Store the unit reference for direct lookup in a 2D array of the grid.
-  grid[x][y].unit = self
-  -- Store the unit reference again in a separate list for more direct iteration (required for restoring units each turn).
-  table.insert(units[teamID], self)
-  self.unitnumber = #units[teamID]
-  -- Store the coordinates as well.
-  self.startX = x
-  self.startY = y
-  self.x = self.startX
-  self.y = self.startY
+  self.actor = java:addLuaActor(self.sprite, 1.0)
+  -- Store the coordinates. These are grabbed by functions in Map and World.
+  self.x = x
+  self.y = y
   -- Place the unit.
-  self.actor:setPosition(g.long(x), g.long(y))
+  self.actor:setPosition(map:long(x), map:long(y))
+  
+  -- Store the unit reference for direct lookup in a 2D array of the grid.
+  map:storeUnitRef(self)
+  -- Store the unit reference again in a separate list for more direct iteration (required for restoring units each turn).
+  table.insert(teamunits[teamID], self)
+  self.unitnumber = #teamunits[teamID]
   
   -- Initialise weapons.
   self.weps = {}
   for i,wep in ipairs(self.WEPS) do
-    if wep.MAXAMMO then
-      self.weps[i] = wep()  -- Instance
-    else
+    if wep:isStatic() then
       self.weps[i] = wep    -- Static
+    else
+      self.weps[i] = wep()  -- Instance
     end
   end
   self.team = teamID
@@ -41,7 +45,8 @@ function Unit:init(x, y, teamID)
   self.fuel = self.MAXFUEL
   -- Sets maximum and remaining moves.
   self.maxmoves = self:getmoves()
-  self.movesleft = self.maxmoves
+  self.movesleft = self.maxmoves  -- This is set a lot, but only checked at selection to make sure you can still move. So, 0 = "ordered".
+  self.isBoarded = false
 end
 function Unit:getHP()
   return self.MAXHP
@@ -54,14 +59,22 @@ function Unit:takeDamage(x)
 end
 function Unit:die()
   --what if you die from a counterattack? shouldn't it be startXY?
-  grid[self.startX][self.startY].unit = nil
-  table.remove(units[self.team], self.unitnumber)
-  self.actor:remove()
+  --UMM LOL
+  --two possibilities: attacker moved and killed its own ref, and has no ref if it dies. but this call will kill ref at its destination. that's ok...
+  --or: defender did not move and needs to kill its own ref.
+  if not self.isBoarded then
+    map:killUnitRef(self)
+    self.actor:remove()
+  end
+  table.remove(teamunits[self.team], self.unitnumber)
   --play an anim
   --Lua should GC if no references, so when the World lets go of its target.
   --by the way, Actors shouldn't have their own Sprites because you should be using an AssetManager. so no need to dispose.
+  
+  --can't ever GC units because they are stored in the replay.
 end
 function Unit:heal(x)
+  --if you're dead, then live again!
   local newhp = self.hp + x
   if newhp > self.MAXHP then
     self.hp = self.MAXHP
@@ -81,55 +94,46 @@ end
 function Unit:burnfuel(x)
   self.fuel = self.fuel - x
 end
-function Unit:wait()
-  self:burnfuel(self.maxmoves - self.movesleft)
-  self.movesleft = 0  -- Acts as a "this unit has been ordered" flag.
-  self.actor:tint(0x7f7f7fff)
-  
-  -- Kill the old reference and store a new one, and store the new starting coords for the next turn.
-  -- If self.startX is nil then it means the unit is waiting after a disembark. If you killed a reference, it'd be of the unit it came off of.
-  if not self.boardnumber then
-    grid[self.startX][self.startY].unit = nil
+function Unit:addfuel(x)
+  local newfuel = self.fuel + x
+  if newfuel > self.MAXHP then
+    self.fuel = self.MAXFUEL
+  else
+    self.fuel = newfuel
   end
-  self.startX = self.x
-  self.startY = self.y
-  grid[self.startX][self.startY].unit = self
 end
-function Unit:board(destunit)
-  -- Similar to wait().
-  
-  self:burnfuel(self.maxmoves - self.movesleft)
-  -- We want to retain movesleft, and there's no need to tint.
-  
-  -- Kill the old reference, but don't store a new one, because you're off the grid.
-  grid[self.startX][self.startY].unit = nil
-  self.startX = nil
-  self.startY = nil
+function Unit:movesused()
+  return (self.maxmoves - self.movesleft)
+end
+function Unit:wait()
+  self.movesleft = 0
+  self.actor:tint(0x7f7f7fff)  -- Grey
+  -- Update grid reference on this valid position.
+  map:storeUnitRef(self)
+end
+function Unit:board(transport)
   self.x = nil
   self.y = nil
+  self.isBoarded = true
   
   self.actor:hide()
-  table.insert(destunit.boardedunits, self)
-  self.boardnumber = #destunit.boardedunits
+  table.insert(transport.boardedunits, self)
+  self.boardnumber = #transport.boardedunits
   --inf appears behind APC when it should be on top. don't really give a fock right now but still. selunit should be always on top.
   -- cackhanded way of doing that would be to hide()show() upon selection.
   --boarding animation(lightshafts)/noise, show boarded icon on APC
 end
-function Unit:disembark(world, destunit)
+function Unit:disembark(transport)
+  self.x = transport.x
+  self.y = transport.y
+  self.isBoarded = false
+  self.actor:setPosition(map:long(self.x), map:long(self.y))
+  
   self.actor:show()
-  -- The purpose of startX and startY is to snap you back to your original location on the grid when you want to undo a move.
-  -- When you want to undo a disembark-move, you will end up ON the APC (not back inside it unless you cancel again), but not on the grid.
-  self.startX = destunit.x
-  self.startY = destunit.y
-  self.x = self.startX
-  self.y = self.startY
-  self.actor:setPosition(g.long(self.x), g.long(self.y))
-  table.remove(destunit.boardedunits, self.boardnumber)  --here's a bug for u. inf1 boards and inf2 boards. inf1 leaves. inf2 is now in 1.
+  table.remove(transport.boardedunits, self.boardnumber)  --here's a bug for u. inf1 boards and inf2 boards. inf1 leaves. inf2 is now in 1.
   --so u need to rethink this system and rename the entry u use to check for boarded units while ur at it.
   --same is true of die(), or any table.remove().
   self.boardnumber = nil
-  -- Now select the unit so it can move...
-  f.select(world, self)
 end
 function Unit:restore()
   -- Restore moves and reset tint.
@@ -146,19 +150,27 @@ function Unit:getmoves()
   end
 end
 function Unit:move(x, y)
-  self.movesleft = self.movesleft - g.mandist(self.x - x, self.x - y)
-  -- Store new (temporary) coordinates.
+  -- Deduct spaces moved, and burn fuel.
+  self.movesleft = self.movesleft - map:mandist(self.x - x, self.y - y)
+  self:burnfuel(self:movesused())
+  -- Update coordinates, but don't store new coordinates yet. You may end up off the grid (boarded).
+  map:killUnitRef(self)
   self.x = x
   self.y = y
   -- Then move the unit with an animation. (At the moment there is no animation.)
   --animatemove
-  self.actor:setPosition(g.long(x), g.long(y))
+  self.actor:setPosition(map:long(x), map:long(y))
 end
-function Unit:snapback()
+function Unit:snapback(x, y)
+  -- Kill ref in case it was set by a wait(); i.e. when rewinding the replay. Not necessary when simply demoving, as the ref was killed.
+  -- The method itself will ensure that you don't kick a boarded transport off the grid by accident.
+  map:killUnitRef(self)
+  -- Restore moves, update the grid reference, and move back.
   self.movesleft = self.maxmoves
-  self.x = self.startX
-  self.y = self.startY
-  self.actor:setPosition(g.long(self.x), g.long(self.y))
+  self.x = x
+  self.y = y
+  map:storeUnitRef(self)
+  self.actor:setPosition(map:long(x), map:long(y))
 end
 function Unit:battle(target, wepindex, defstars)
   -- Round up HP to ints from 1-10, then convert to percentage strengths for battle calculation.
@@ -166,7 +178,7 @@ function Unit:battle(target, wepindex, defstars)
   local defstrength = math.ceil((target.hp / target.MAXHP) * 10) / 10
   local weapon = self.weps[wepindex]
   -- Look up the modifier for the ammo type on the defender's armour.
-  local armourpenalty = g.ammomod[weapon.AMMOTYPE][target.ARMOUR]
+  local armourpenalty = g.AMMOMOD[weapon.AMMOTYPE][target.ARMOUR]
   -- Terrain defences subtract 10% damage for each star, but the effect is proportional to the defender's strength.
   local terrainpenalty = (1 - (0.1 * defstars * defstrength))
   
@@ -178,17 +190,17 @@ function Unit:battle(target, wepindex, defstars)
 end
 function Unit:validweps(target, indirectallowed)
   local weplist = {}
-  local dist = g.mandist(self.x - target.x, self.y - target.y)
+  local dist = map:mandist(self.x - target.x, self.y - target.y)
   
   for i,wep in ipairs(self.weps) do
     -- Conditions:
-    --  Non-zero ammo. This means that both weapons with remaining ammo AND nil ammo (infinite) are allowed.
-    --  Target is within minimum and maximum ranges.
-    --  Target armour type is hittable with this weapon damage type.
-    --  Weapon is direct, or indirect weapons are allowed.
+    -- Non-zero ammo. This means that both weapons with remaining ammo AND nil ammo (infinite) are allowed.
     if (wep.ammo ~= 0)
+    -- Target is within minimum and maximum ranges.
     and (wep.MINRANGE <= dist and dist <= wep.MAXRANGE)
-    and (g.ammomod[wep.AMMOTYPE][target.ARMOUR])
+    -- Target armour type is hittable with this weapon damage type.
+    and (g.AMMOMOD[wep.AMMOTYPE][target.ARMOUR])
+    -- Weapon is direct, or indirect weapons are allowed.
     and (wep.DIRECT or indirectallowed) then
       table.insert(weplist, i)
     end
@@ -206,6 +218,16 @@ function Weapon:init()
   -- So they could just be tables right now.
   self.ammo = self.MAXAMMO
 end
+function Weapon:isStatic()
+  -- Checks if the weapon can be made static.
+  -- Currently, this only checks if the weapon uses ammo or not.
+  if not self.MAXAMMO then
+    return true
+  else
+    return false
+  end
+end
+
 function Weapon:fire()
   if self.MAXAMMO then
     self.ammo = self.ammo - 1
@@ -216,7 +238,7 @@ wep.Rifle = class(Weapon)
 statics = {
   NAME = "Rifle",
   DAMAGE = 60,
-  AMMOTYPE = g.ammotypes.RifleRound,
+  AMMOTYPE = g.AMMOTYPES.RIFLE,
   MAXAMMO = nil,
   DIRECT = true,
   MINRANGE = 1,
@@ -244,17 +266,17 @@ statics = {
   NAME = "Infantry",
   COST = 1000,
   MOVERANGE = 3,
-  MOVETYPE = g.movetypes.Infantry,
+  MOVETYPE = g.MOVETYPES.INF,
   MAXHP = 100,
   MAXFUEL = 99,
-  ARMOUR = g.armours.Vest,
+  ARMOUR = g.ARMOURS.VEST,
   WEPS = {[1] = wep.Rifle}
   --CAPTURESTRENGTH = 1.0
 }
 g.addPairs(u.Infantry, statics)
 function u.Infantry:init(x, y, teamID)
   self.sprite = "PCW/unit_sprites/Default/inf_red_1.png"
-  if teamID == g.teams.Blue then
+  if teamID == g.TEAMS.BLUE then
     self.sprite = "PCW/unit_sprites/Default/inf_blue_1.png"
   end
 
@@ -266,10 +288,10 @@ statics = {
   NAME = "APC",
   COST = 4000,
   MOVERANGE = 6,
-  MOVETYPE = g.movetypes.Track,
+  MOVETYPE = g.MOVETYPES.TRACK,
   MAXHP = 100,
   MAXFUEL = 99,
-  ARMOUR = g.armours.HVeh,
+  ARMOUR = g.ARMOURS.H_VEH,
   WEPS = {},
   
   BOARDABLE = g.set{u.Infantry.NAME},

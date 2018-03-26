@@ -1,30 +1,56 @@
-local c = require "Commands"
+require "class"
+--Don't forget to make a list of defaults and a modifiable version.
+--Maybe the defaults are just here, and the game decides whether or not to override.
 
-local i = {}
+local u = {}  -- Public.
+local inp = {}
 
--- If you're worried about making typos here on Commands, see "Detecting Undefined Variables".
--- Don't forget to make a list of defaults and a modifiable version.
+-- Will basically just be binding inputs to world methods.
+local world
+local KEYS
+local BUTTONS
+local SCROLLUP = -1
+local SCROLLDOWN = 1
 
-i.keyDown = {}
-i.keyDown[4] = c.Cancel --Android back button.
-i.keyDown[41] = c.Menu --M
-i.keyDown[44] = c.PrintCoord --P
-i.keyDown[46] = c.RangeAllOn --R
-i.keyDown[33] = c.NextTurn --E
+u.InputMap = class()
+function u.InputMap:init(World, inputKeys, inputButtons)
+  world = World
+  KEYS = inputKeys
+  BUTTONS = inputButtons
+  
+  inp.keyDown = {}
+  inp.keyDown[KEYS.RIGHT] = world.cursorRight --hold...
+  inp.keyDown[KEYS.BACK] = world.cancelLast
+--  i.keyDown[KEYS.M] = c.Menu
+--  i.keyDown[KEYS.P] = c.PrintCoord
+--  i.keyDown[KEYS.R] = c.RangeAllOn
+  inp.keyDown[KEYS.E] = world.NextTurn
+  inp.keyDown[KEYS.MINUS] = world.ReplayUndo
+  inp.keyDown[KEYS.EQUALS] = world.ReplayRedo
+  inp.keyDown[KEYS.BACKSPACE] = world.ReplayResume
 
-i.keyUp = {}
-i.keyUp[46] = c.RangeAllOff --R
+  inp.keyUp = {}
+--  i.keyUp[KEYS.R] = c.RangeAllOff
 
-i.touchDown = {}
-i.touchDown[2] = c.PanStart --MMB
+  inp.touchDown = {}
+--  i.touchDown[BUTTONS.MIDDLE] = c.PanStart
 
-i.touchUp = {}
-i.touchUp[0] = c.Select
-i.touchUp[1] = c.Cancel --hold RMB to deselect - could be a method in Unit; deselectTimer++.
-i.touchUp[2] = c.PanStop --MMB
+  inp.touchUp = {}
+  inp.touchUp[BUTTONS.LEFT] = world.selectNext
+  inp.touchUp[BUTTONS.RIGHT] = world.cancelLast
+--  i.touchUp[BUTTONS.MIDDLE] = c.PanStop
 
-i.scrolled = {}
-i.scrolled[-1] = c.ZoomIn
-i.scrolled[1] = c.ZoomOut
+  inp.scrolled = {}
+  inp.scrolled[SCROLLUP] = world.ZoomIn
+  inp.scrolled[SCROLLDOWN] = world.ZoomOut
+end
 
-return i
+function u.InputMap:tryBind(itype, ival)
+  -- Looks for a bound function, and executes it.
+  local bind = inp[itype][ival]
+  if bind then
+    bind(world)
+  end
+end
+
+return u

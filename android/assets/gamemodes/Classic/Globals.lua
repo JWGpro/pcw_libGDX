@@ -1,95 +1,74 @@
 local g = {}
 
-local cellsize
-function g.setCellsize(x)
-  cellsize = x
-end
-function g.getCellsize()
-  return cellsize
-end
+-- Constants
 
---Temporary...this okay?
---g.gamescreen
---g.grid
---g.teamunits
-
-g.teams = {Neutral = "Neural", Red = "Red", Blue = "Blue", Yellow = "Yellow", Green = "Green"}
-
---Stub. In World? Only if you want to pass it around. Globals are accessible everywhere.
-g.terrain = {}
-
-g.movetypes = {
-  Inf = "Infantry",
-  Mech = "Mech",
-  Tyre = "Tyres",
-  Track = "Tracks",
-  Air = "Aircraft",
-  Ship = "Ship",
-  Lander = "Lander"
+g.TEAMS = {
+  NEUTRAL = "Neutral",
+  RED = "Red",
+  BLUE = "Blue",
+  YELLOW = "Yellow",
+  GREEN = "Green"
+}
+g.ACTS = {
+  ATTACK = "Attack",
+  CAPTURE = "Capture",
+  SUPPLY = "Supply",
+  WAIT = "Wait",
+  BOARD = "Board",
+  DEPLOY = "Deploy",
+  UNLOAD = "Unload",
+  JOIN = "Join",
+  LINK = "Link"
 }
 
-g.armours = {
-  Vest = "Ballistic vest",
-  LVeh = "Soft-skinned vehicle",
-  HVeh = "Amoured vehicle",
+--stub
+g.TERRAIN = {}
+
+g.MOVETYPES = {
+  INF = "Infantry",
+  MECH = "Mech",
+  TYRE = "Tyres",
+  TRACK = "Tracks",
+  AIR = "Aircraft",
+  SHIP = "Ship",
+  LANDER = "Lander"
+}
+
+g.ARMOURS = {
+  VEST = "Ballistic vest",
+  L_VEH = "Soft-skinned vehicle",
+  H_VEH = "Amoured vehicle",
   ERA = "Reactive armour",
-  Copter = "Helicopter armour"
+  COPTER = "Helicopter armour"
 }
 
-g.ammotypes = {
-  RifleRound = "Rifle round",
+g.AMMOTYPES = {
+  RIFLE = "Rifle round",
   CAL50 = ".50 cal",
   HEAT = "HEAT",
-  Sabot = "APFSDS"
+  SABOT = "APFSDS"
 }
 
-local a = g.armours
-local ammo = g.ammotypes
-g.ammomod = {
-  [ammo.RifleRound] = {
-    [a.Vest] = 1,
-    [a.LVeh] = 0.5,
-    [a.HVeh] = 0.05,
+local a = g.ARMOURS
+local AMMO = g.AMMOTYPES
+g.AMMOMOD = {
+  [AMMO.RIFLE] = {
+    [a.VEST] = 1,
+    [a.L_VEH] = 0.5,
+    [a.H_VEH] = 0.05,
     [a.ERA] = 0.01,
-    [a.Copter] = 0.1
+    [a.COPTER] = 0.1
   },
-  [ammo.CAL50] = {
-    [a.Vest] = 1,
-    [a.LVeh] = 0.8,
-    [a.HVeh] = 0.1,
+  [AMMO.CAL50] = {
+    [a.VEST] = 1,
+    [a.L_VEH] = 0.8,
+    [a.H_VEH] = 0.1,
     [a.ERA] = 0.05,
-    [a.Copter] = 0.25
+    [a.COPTER] = 0.25
   }
 }
 
-function g.snap(x)
-  --Snaps a "long" coordinate onto the grid of cellsize-d cells.
-  --"Long" coordinates.
-  local coord = cellsize * math.floor(x / cellsize)
-  return coord
-end
-
-function g.long(x)
-  --Upscales a "short" grid coordinate into a "long" coordinate, e.g. for placing in the stage.
-  --"Long" coordinates.
-  local coord = cellsize * x
-  return coord
-end
-
-function g.short(x)
-  --Downscales a "long" coordinate to a "short" grid coordinate, e.g. for human-readable display.
-  --"Short" coordinates.
-  local coord = math.floor(x / cellsize)
-  return coord
-end
-
-function g.mandist(x, y)
-  --"Manhattan distance" of a vector.
-	--Takes a vector, gets the absolute, returns Manhattan length.
-	--Most appropriately used with short coordinates rather than long.
-  local dist = math.floor(math.abs(x) + math.abs(y))
-  return dist
-end
+-- Functions
 
 function g.clampMin(n, min)
   if n < min then
@@ -105,34 +84,6 @@ function g.clampMax(n, max)
   else
     return n
   end
-end
-
-function g.manrange(startX, startY, mapw, maph, minrange, maxrange)
-  --Returns the Manhattan or Taxicab "circle" range from a starting x/y, clamping within a map w/h, taking into account minimum range.
-  --Used to get ranges, e.g. for movement and attack.
-  --The x and y coordinates of the map may be different, but this function assumes the origin is always 0,0.
-  local cells = {}
-  
-  --Sets the initial x bounds to between +/- maxrange (clamped within the map).
-  local minX = g.clampMin(startX - maxrange, 0)
-  local maxX = g.clampMax(startX + maxrange, mapw - 1)
-
-  for x=minX,maxX do
-    local xr = math.abs(startX - x)
-    local yrange = maxrange - xr
-    --Sets the y bounds to whatever is left of the range after traversing x (again clamped within the map).
-    local minY = g.clampMin(startY - yrange, 0)
-    local maxY = g.clampMax(startY + yrange, maph - 1)
-    for y=minY,maxY do
-      local yr = math.abs(startY - y)
-      --Proceed if Manhattan distance >= minrange.
-      if (xr + yr) >= minrange then
-        --Store the coordinates of the valid cell.
-        table.insert(cells, {x,y})
-      end
-    end
-  end
-  return cells
 end
 
 function g.set(list)
@@ -163,12 +114,12 @@ end
 
 function g.addPairs(table, keypairs)
   -- This is simply meant to reduce repetition when adding several k,v pairs. For example:
-  --  u.Infantry.NAME = "Infantry"
-  --  u.Infantry.COST = 1000
+  --  u.INFantry.NAME = "INFantry"
+  --  u.INFantry.COST = 1000
   --  ...
   -- Becomes:
-  --  statics = {NAME = "Infantry", COST = 1000, ...}
-  --  g.addPairs(u.Infantry, statics)
+  --  statics = {NAME = "INFantry", COST = 1000, ...}
+  --  g.addPairs(u.INFantry, statics)
  
   for k,v in pairs(keypairs) do
     table[k] = v
@@ -186,8 +137,8 @@ function g.hasVector2key(table, vec)
   end
 end
 
-function g.next(table, check)
-  -- Takes an array-like table and returns the value after the one passed.
+function g.cycle(table, check)
+  -- Takes an array-like table and returns the value after the "check" value passed.
   -- It's not really trivial because [i+1] would be nil for the last value.
   for i,v in ipairs(table) do
     if v == check then

@@ -5,132 +5,18 @@
 --Everything should use short coords where possible.
 --They need to be converted to long for passing to actors. Could override the Java method, but you'd have to do it with a cellsize param.
 
---[[
---For printing tables.
-  for k, v in pairs(table) do
-    print(k, v)
-  end
-]]--
+local world
+local inputmap
 
-local g
-local i
-local u
-local f
-
-local world = {}
-
-world.grid = {}
-world.map = {}
-world.cursor = nil
-world.panning = false
-local lastX local lastY local offX local offY
-world.states = {DEFAULT = 1, MOVE = 2, ACT = 3, TARGET = 4} --Globals?
-world.acts = {Attack = "Attack", Capture = "Capture", Supply = "Supply", Wait = "Wait", Board = "Board", Deploy = "Deploy", Unload = "Unload", Join = "Join"}
-
---Contains all the state modifiable through the selection process.
-world.selection = {}
-local sel = world.selection
-sel.state = world.states.DEFAULT
-sel.mrangetiles = {}
-sel.boardabletiles = {}
-sel.passagetiles = {}
-sel.arangetiles = {}
---[[ And these uninitialised variables:
-sel.players = nil
-sel.player = nil
-sel.teamunits = nil
-sel.unit
-]]--
-
---Command history.
---Don't think this needs to be mutable here, because a replay should show the entire history.
---If this was an editor, you could undo Commands, and then pop them if they did something else.
---
---The replay may need each Command to self. the world as a snapshot, or snapshot by other means.
-local history = {}
+local lastX local lastY
 
 function init(gameScreen, gameCamera, gameStage, uiCamera, uiStage, tiledMap, externalDir, inputKeys, inputButtons)
-  world.gamescreen = gameScreen
-  world.camera = gameCamera
-  local gstage = gameStage
-  world.UIcamera = uiCamera
-  world.UIstage = uiStage
-  local tiledmap = tiledMap --TiledMap object.
-  world.extdir = externalDir
-  --inputKeys
-  --inputButtons
-  
-  --Might want to import everything here upfront to prevent any possibility of hanging later!
-  package.path =  world.extdir .. "PCW/gamemodes/Classic/?.lua;" .. package.path
-  g = require "Globals"
-  i = require "InputMap"
-  f = require "commandfuncs"
-  require "Cursor"
-  
-  sel.players = {g.teams.Red, g.teams.Blue}
-  sel.player = sel.players[1]
-  -- Create a list of units for each team.
-  sel.teamunits = {}
-  for i,v in ipairs(sel.players) do
-    sel.teamunits[v] = {}
-  end
-  g.teamunits = sel.teamunits
-  
-  world.camera.zoom = 0.5
-  offX = world.camera.viewportWidth / 2
-  offY = world.camera.viewportHeight / 2
-  
-  --Map data storage, cellsize acquisition.
-  --Since the range layer always starts off empty, might be a better idea to add it programmatically than force users to add it in maps!
-  local prop = tiledmap:getProperties()
-  world.map.w = prop:get("width")
-  world.map.h = prop:get("height")
-  g.setCellsize(prop:get("tilewidth")) --Assumes that width and height are identical!
---  g.cellsize = prop:get("tilewidth") --WHY DOESN'T THIS WORK???
-  local layers = tiledmap:getLayers() --MapLayers object. Returned with the Map method, getLayers().
-  local layercount = layers:getCount()
-  local sets = tiledmap:getTileSets() --TiledMapTileSets object.
-  --NOTE: You can get tiles straight from the TiledMapTileSets object, with the "firstgid". This shit is just broken though. How will I make maps?
-  world.map.layers = {}
-  world.map.tilesets = {}
-  for i=0, layercount-1 do --Assumes layercount>0.
-    --CAUTION: This loop assumes that the number of layers equals the number of tilesets!
-    local layer = layers:get(i)
-    local lname = layer:getName()
-    world.map.layers[lname] = layer --Stores a TiledMapTileLayer object under its name.
-    local set = sets:getTileSet(i)
-    local setname = set:getName()
-    world.map.tilesets[setname] = set --Stores a TiledMapTileSet object under its name.
-  end
-  
-  --Create the map grid, in which units, tiles, targets etc. can be stored.
-  for x=0, world.map.w - 1 do
-    world.grid[x] = {}
-    for y=0, world.map.h - 1 do
-      world.grid[x][y] = {}
-      --Also instantiate Cells for the range layers.
-      local cellM = world.gamescreen:newCell()
-      world.map.layers.Mrange:setCell(x, y, cellM)
-      local cellA = world.gamescreen:newCell()
-      world.map.layers.Arange:setCell(x, y, cellA)
-    end
-  end
-  g.grid = world.grid  --Just a reference...
-  g.gamescreen = world.gamescreen
-  
-  --Initialise unit-related UI.
-  f.UIinit(world)
-  
-  u = require "Units"
-  
-  local inf1 = u.Infantry(12, 12, g.teams.Blue)
-  local inf2 = u.Infantry(16, 16, g.teams.Blue)
-  local inf3 = u.Infantry(15, 15, g.teams.Red)
-  local apc1 = u.APC(16, 15, g.teams.Red)
-  local inf4 = u.Infantry(49, 49, g.teams.Red)
-  
-  world.cursor = Cursor.new(world.gamescreen, g.getCellsize())
---  stage:setKeyboardFocus(cursor)
+  -- Initialise everything here to prevent any possibility of hanging later!
+  package.path =  externalDir .. "PCW/gamemodes/Classic/?.lua;" .. package.path
+  local w = require "World"
+  local im = require "InputMap"
+  world = w.World(gameScreen, gameCamera, tiledMap, externalDir, uiStage)
+  inputmap = im.InputMap(world, inputKeys, inputButtons)
 end
 
 function runlistener(func, object, event, actor)
@@ -144,24 +30,16 @@ function loop(delta)
 --  print(#history)
 end
 
---Input event handling methods below.
+-- Input event handling methods below.
+-- All global so Java can find them (for now).
 -- Comment in the parameter types for each method, so you know what to expect.
---At the moment, correctly ignores unbound keys, but may not properly instantiate commands...
 
 function keyDown(keycode)
-  local command = i.keyDown[keycode]
-  if command ~= nil then
-    command():execute(world)
-    table.insert(history, command)
-  end
+  inputmap:tryBind("keyDown", keycode)
 end
 
 function keyUp(keycode)
-  local command = i.keyUp[keycode]
-  if command ~= nil then
-    command():execute(world)
-    table.insert(history, command)
-  end
+  inputmap:tryBind("keyUp", keycode)
 end
 
 function keyTyped(character)
@@ -169,66 +47,39 @@ function keyTyped(character)
 end
 
 function touchDown(screenX, screenY, pointer, button)
-  --Set for panning.
+  --Set for panning; init pan.
   lastX = screenX
   lastY = screenY
   
-  --Update cursor.
-  local cam = world.camera
-  local newX = g.snap(cam.position.x - ((offX - screenX) * cam.zoom))
-  local newY = g.snap(cam.position.y - ((screenY - offY) * cam.zoom))
-  world.cursor.actor:setPosition(newX, newY)
-  
-  local command = i.touchDown[button]
-  if command ~= nil then
-    command():execute(world)
-    table.insert(history, command)
-  end
+  world:updateCursor(screenX, screenY)
+  inputmap:tryBind("touchDown", button)
 end
 
 function touchUp(screenX, screenY, pointer, button)
-  local command = i.touchUp[button]
-  if command ~= nil then
-    command():execute(world)
-    table.insert(history, command)
-  end
+  inputmap:tryBind("touchUp", button)
 end
 
 function touchDragged(screenX, screenY, pointer)
-  --Set for panning.
+  --Set for panning; now panning.
   local deltaX = screenX - lastX
   local deltaY = lastY - screenY
   lastX = screenX
   lastY = screenY
 
-  --It appears that you need this boolean to pan with MMB, because there is no parameter for the button used to drag.
---  if world.panning then
-    local cam = world.camera
-    cam:translate(deltaX, deltaY)
---  else
-    --Update cursor.
---    local cam = world.camera
-    local newX = g.snap(cam.position.x - ((offX - screenX) * cam.zoom))
-    local newY = g.snap(cam.position.y - ((screenY - offY) * cam.zoom))
-    world.cursor.actor:setPosition(newX, newY)
---  end
+  --It appears that you need to set a boolean to pan with MMB, because there is no parameter for the button used to drag.
+  --That param is in touchUp and touchDown, so they can set that boolean.
+  --but eventually u probably control this with world or sth...
+  world:updateCamera(deltaX, deltaY)
+  world:updateCursor(screenX, screenY)
   
 end
 
 function mouseMoved(screenX, screenY)
-  --Update cursor.
-  local cam = world.camera
-  local newX = g.snap(cam.position.x - ((offX - screenX) * cam.zoom))
-  local newY = g.snap(cam.position.y - ((screenY - offY) * cam.zoom))
-  world.cursor.actor:setPosition(newX, newY)
+  world:updateCursor(screenX, screenY)
 end
 
 function scrolled(amount)
-  local command = i.scrolled[amount]
-  if command ~= nil then
-    command():execute(world)
-    table.insert(history, command)
-  end
+  inputmap:tryBind("scrolled", amount)
 end
 
 --Touch gesture detector events below.

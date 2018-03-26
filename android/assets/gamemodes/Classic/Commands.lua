@@ -1,165 +1,214 @@
 require "class"
 local g = require "Globals"
-local f = require "commandfuncs"
 
 local Command = class()
---function Command:execute(world) end
---function Command:undo(world) end
+--function Command:init(args) end
+--function Command:execute() end
+--function Command:undo() end
 
-local c = {}
+local u = {}
 
-c.Select = class(Command)
-function c.Select:execute(world)
-  local s = world.states
-  local state = world.selection.state
-  
-  --Drawback: this command can have no effect, but will still be stored in the history. Fix that.
-  
-  if state == s.DEFAULT then
-    --Select unit or deployment building.
-    f.select(world)
-  elseif state == s.MOVE then
-    --Move unit.
-    f.move(world)
-  elseif state == s.ACT then
-    --Select action.
-    --Possibly defer to Scene2D buttons...but you will need to select them with keys too.
-  elseif state == s.TARGET then
-    --Select target and attack it.
-    f.target(world)
-  end
-  
+-- A command should hold as instance vars, the minimum data necessary to do and undo ("store") the command.
+-- As for imperative statements, it should defer as much as possible to the receiver (i.e. just a method call).
+
+u.MoveCommand = class(Command)
+function u.MoveCommand:init(unit, x, y)
+  self.unit = unit
+  -- Stores starting location.
+  self.startX = self.unit.x
+  self.startY = self.unit.y
+  self.x = x
+  self.y = y
+  self.burnedfuel = nil
+  self:execute()
 end
-function c.Select:undo(world)
-  local s = world.states
-  local state = world.selection.state
-  
-  if state == s.DEFAULT then
-    --Do nothing. This shouldn't be called ingame, but would in a replay.
-  elseif state == s.MOVE then
-    --Undo the selection.
-    f.undoselect(world)
-  elseif state == s.ACT then
-    --Undo the movement.
-    f.undomove(world)
-  elseif state == s.TARGET then
-    --Undo the attack command.
-    f.undoattack(world)
-  end
+function u.MoveCommand:execute()
+  -- Moves unit to destination, and also stores the fuel burned.
+  self.unit:move(self.x, self.y)
+  self.burnedfuel = self.unit:movesused()
+end
+function u.MoveCommand:undo()
+  -- Snaps the unit back to its starting location, and restores the fuel. Can't do that in snapback.
+  self.unit:snapback(self.startX, self.startY)
+  self.unit:addfuel(self.burnedfuel)
 end
 
-c.Cancel = class(Command)
-function c.Cancel:execute(world)
-  local s = world.states
-  local state = world.selection.state
-  
-  --Possible other state: menu.
-  
-  if state ~= s.DEFAULT then
-    --Progressively cancel the selection by calling its undo method.
-    c.Select:undo(world)
-  end
+-- Everything below is action commands.
+-- Action commands are only ever undone via replay rewind, in combination with a move command.
+-- Therefore, there's no need for any action command to store (for undo) anything covered by the move command undo (e.g. unit:snapback).
+
+u.WaitCommand = class(Command)
+-- The wait command might seem unnecessary, and appended to all action commands - but at least Board must not wait() the unit.
+-- For now, the implementation here (wait and restore) is copypasted to every command that needs it, instead of storing another WaitCommand.
+-- That might prove shortsighted.
+function u.WaitCommand:init(unit)
+  self.unit = unit
+  self:execute()
 end
-function c.Cancel:undo(world)
-  --Ok to get Command? Otherwise it's just static.
-  c.Select:execute(world)
+function u.WaitCommand:execute()
+  self.unit:wait()
+end
+function u.WaitCommand:undo()
+  self.unit:restore()
 end
 
-c.Menu = class(Command)
-function c.Menu:execute(world)
+u.AttackCommand = class(Command)
+function u.AttackCommand:init(unit, weapon, target)
+  self.unit = unit
+  self.weapon = weapon
+  self.target = target
+  self:execute()
 end
-function c.Menu:undo()
+function u.AttackCommand:execute()
+  --units should have a getDefence() method that calls the map, or a .defstars that's set on move/build/unload... erm, yeah, the method.
+  self.unit:battle(self.target, self.weapon)
 end
-
-c.ZoomIn = class(Command)
-function c.ZoomIn:execute(world)
-  local cam = world.camera
-  cam.zoom = cam.zoom / 1.5
-end
-
-c.ZoomOut = class(Command)
-function c.ZoomOut:execute(world)
-  local cam = world.camera
-  cam.zoom = cam.zoom * 1.5
+function u.AttackCommand:undo()
+  --ammo (for both)
+  --hp (for both)
 end
 
-c.PrintCoord = class(Command)
-function c.PrintCoord:execute(world)
-  local cur = world.cursor.actor
-  print(g.short(cur:getX()), g.short(cur:getY()))
+u.CaptureCommand = class(Command)
+function u.CaptureCommand:init(unit, building)
+  self.unit = unit
+  self.building = building
+  self:execute()
+end
+function u.CaptureCommand:execute()
+  self.unit:capture(self.building)
+end
+function u.CaptureCommand:undo()
+  --undo
 end
 
-c.PanStart = class(Command)
-function c.PanStart:execute(world)
-  world.panning = true
-  world.gamescreen:catchCursor(true)
+u.SupplyCommand = class(Command)
+function u.SupplyCommand:init(unit, targets)
+  self.unit = unit
+  self.targets = targets
+  --for each target getSupply()
+  self:execute()
+end
+function u.SupplyCommand:execute()
+  self.unit:supply()
+end
+function u.SupplyCommand:undo()
+  --reset each target supply
 end
 
-c.PanStop = class(Command)
-function c.PanStop:execute(world)
-  world.panning = false
-  world.gamescreen:catchCursor(false)
+u.BuildCommand = class(Command)
+function u.BuildCommand:init(building, unit)
+  -- Only done by a building.
+  self.source = building
+  self.product = unit
+--  self.money
+  self:execute()
+end
+function u.BuildCommand:execute()
+  self.building:build(self.unit)
+end
+function u.BuildCommand:undo()
+  --no more unit
 end
 
-c.Menu = class(Command)
-function c.Menu:execute(world)
-  world.gamescreen:toggleMenu()
-  print("menu toggled")
+u.DeployCommand = class(Command)
+function u.DeployCommand:init(unit, cargo)
+  -- This is how units like aircraft carriers do it. The deployed unit stays inside the transport until an unload command.
+  self.unit = unit
+  self.cargo = cargo
+--  self.money
+  self:execute()
+end
+function u.DeployCommand:execute()
+  self.unit:build(self.cargo)
+end
+function u.DeployCommand:undo()
+  --no more unit. maybe die()
 end
 
-c.RangeAllOn = class(Command)
-function c.RangeAllOn:execute(world)
-  for k,unit in pairs(world.units) do
-    print(unit)
-  end
+u.BoardCommand = class(Command)
+function u.BoardCommand:init(cargo, transport)
+  self.cargo = cargo
+  self.transport = transport
+  self:execute()
+end
+function u.BoardCommand:execute()
+  -- This is one case where the acting unit does not wait afterwards; it can be transported, unloaded and moved again.
+  self.cargo:board(self.transport)
+end
+function u.BoardCommand:undo()
+  self.cargo:disembark(self.transport)
 end
 
-c.RangeAllOff = class(Command)
-function c.RangeAllOff:execute(world)
-  --clear tiles
+u.UnloadCommand = class(Command)
+function u.UnloadCommand:init(transport, cargo)
+  self.transport = transport
+  self.cargo = cargo
+  self:execute()
+end
+function u.UnloadCommand:execute()
+  -- Unloads the cargo. The caller of this command (e.g. World) will then select the cargo.
+  self.cargo:disembark(self.transport)
+  self.transport:wait() --this means you can only unload once, so this is wrong, but temporary.
+end
+function u.UnloadCommand:undo()
+  -- Puts the cargo back in the transport.
+  --this is probs gonna change the order of the units in the transport (putting it to the back due to replay), but oh wel.
+  --same with the BoardCommand which is just the reverse.
+  self.cargo:board(self.transport)
+  self.transport:restore() --
 end
 
-c.NextTurn = class(Command)
-function c.NextTurn:execute(world)
-  local sel = world.selection
-  -- Restore the units of the current player.
-  for i,unit in ipairs(sel.teamunits[sel.player]) do
-    unit:restore()
-  end
-  -- Cycle control.
-  sel.player = g.next(sel.players, sel.player)
-  print("It's " .. sel.player .. "'s turn!")
+u.JoinCommand = class(Command)
+function u.JoinCommand:init(unit, target)
+  self.unit = unit
+  self.target = target
+  self:execute()
+end
+function u.JoinCommand:execute()
+  self.unit:join(self.target)
+end
+function u.JoinCommand:undo()
+  --separate
 end
 
---[[
-"make sure every data modification goes through a command"
-Therefore you will make units move with Commands, even though there is no control for this.
-Everything has to be done with Commands.
-Except maybe camera panning...Well, you may want to control camera to show a unit being moved.
-Certainly anything you want to be shown in a replay.
-]]--
-local View = {
-  SELECT,
-  CONFIRM,
-  CANCEL, --undos: select, menu, unit info.
-  MENU,
-  NEXT_UNIT,
-  UNIT_INFO,
-  ZOOM_IN,
-  ZOOM_OUT,
-  CURSOR_LEFT,
-  CURSOR_RIGHT,
-  CURSOR_UP, --someone may want to traverse menus by scrolling.
-  CURSOR_DOWN,
-  PAN,
-  FAST_PAN,
-  --Functions below are menu items not usually bound
-  QUIT_TO_MENU,
-  CLOSE_GAME,
-  SHOW_MAP,
-  SHOW_TERRAIN_INFO,
-  SHOW_UNIT_INFO,
-  SHOW_DAMAGE_CALCULATOR
-}
 
-return c
+--   > Statics
+-- You will not have static commands here.
+
+-- Could bind inputs to not commands, but "controls". "Select" does select/move/target for example. But those are distinct commands.
+-- "fullHistory" should only contain full moves; GameMove objects.
+-- When you want to get the current move to cancel the most recent command, it's just held in a var and committed to fullHistory on completion.
+
+-- Because ultimately, what do you want "command" for?
+--  > Control binding.
+--  > Undo within move.
+--  > Undo last move. (but later, if at all - might not be necessary.)
+--  > Store move history.
+--  > AI/network moves.
+-- But these may be implemented differently.
+-- Control binding already seems simple enough. You wouldn't need to instantiate any objects to do that.
+-- So start with the AI moves. Remember how replays don't show everything?
+
+-- A move could be a set of commands. Rewind one step, and the whole move is undone.
+-- Keeping a separate command object structure would still be useful for undo-within-move though.
+
+u.GameMove = class(Command)
+function u.GameMove:init(moveCommand, actionCommand)
+  -- This is purely game-facing; for replays, networking, AI, etc.
+  -- Three components: a unit to act on, a destination to go to, and an action to perform there.
+  -- Though at the moment, the "unit" component isn't used as each command holds a reference to the unit anyway.
+  self.moveCommand = moveCommand
+  self.actionCommand = actionCommand
+end
+function u.GameMove:execute()
+  self.moveCommand:execute()
+  self.actionCommand:execute()
+end
+function u.GameMove:undo()
+  -- Undo in the reverse order (it matters).
+  self.actionCommand:undo()
+  self.moveCommand:undo()
+end
+
+
+return u
