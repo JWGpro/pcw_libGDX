@@ -130,6 +130,14 @@ public class LuaScript implements Script {
                     ie.printStackTrace();
                 }
 
+                // Give suggestions for common errors.
+                if (lastline.contains("userdata expected")) {
+                    lastline = lastline + " [Suggestion: did you just try to call a Java method from Lua" +
+                            " with a dot instead of a colon?]";
+                } else if (lastline.contains("attempt to call table")) {
+                    lastline = lastline + " [Suggestion: did you just type 'for k,v in table'" +
+                            " instead of 'for k,v in pairs(table)'?]";
+                }
                 Gdx.app.log("Debug", "LUA EXECUTE ERROR! " + lastline);
                 return false;
             }

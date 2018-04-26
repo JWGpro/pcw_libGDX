@@ -12,25 +12,22 @@ local u = {}
 -- As for imperative statements, it should defer as much as possible to the receiver (i.e. just a method call).
 
 u.MoveCommand = class(Command)
-function u.MoveCommand:init(unit, x, y)
+function u.MoveCommand:init(unit, dest)
   self.unit = unit
   -- Stores starting location.
-  self.startX = self.unit.x
-  self.startY = self.unit.y
-  self.x = x
-  self.y = y
-  self.burnedfuel = nil
+  self.startpos = unit.pos
+  self.dest = dest
+  self.startfuel = unit.fuel
   self:execute()
 end
 function u.MoveCommand:execute()
-  -- Moves unit to destination, and also stores the fuel burned.
-  self.unit:move(self.x, self.y)
-  self.burnedfuel = self.unit:movesused()
+  -- Moves unit to destination.
+  self.unit:move(self.dest)
 end
 function u.MoveCommand:undo()
   -- Snaps the unit back to its starting location, and restores the fuel. Can't do that in snapback.
-  self.unit:snapback(self.startX, self.startY)
-  self.unit:addfuel(self.burnedfuel)
+  self.unit:snapback(self.startpos)
+  self.unit:setFuel(self.startfuel)
 end
 
 -- Everything below is action commands.
@@ -53,32 +50,40 @@ function u.WaitCommand:undo()
 end
 
 u.AttackCommand = class(Command)
-function u.AttackCommand:init(unit, weapon, target)
+function u.AttackCommand:init(unit, wepindex, target)
   self.unit = unit
-  self.weapon = weapon
+  self.unitHp = unit.hp
+  self.wepindex = wepindex
+  --weapon
+  --target weapon! (firstwep)
   self.target = target
+  self.targetHp = target.hp
   self:execute()
 end
 function u.AttackCommand:execute()
-  --units should have a getDefence() method that calls the map, or a .defstars that's set on move/build/unload... erm, yeah, the method.
-  self.unit:battle(self.target, self.weapon)
+  self.unit:battle(self.target, self.wepindex)
+  self.unit:wait()
 end
 function u.AttackCommand:undo()
-  --ammo (for both)
-  --hp (for both)
+  --restore lost ammo (for both)
+  --restore lost hp (for both)
+  self.unit:restore()
 end
 
 u.CaptureCommand = class(Command)
-function u.CaptureCommand:init(unit, building)
+function u.CaptureCommand:init(unit, property)
   self.unit = unit
-  self.building = building
+  self.property = property
+  self.propertyCap = property.capStrength
   self:execute()
 end
 function u.CaptureCommand:execute()
-  self.unit:capture(self.building)
+  self.property:partialCapture(self.unit)
+  self.unit:wait()
 end
 function u.CaptureCommand:undo()
-  --undo
+  self.property:setCap(self.propertyCap)
+  self.unit:restore()
 end
 
 u.SupplyCommand = class(Command)

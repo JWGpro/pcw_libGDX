@@ -2,20 +2,28 @@ package com.pcw.game.InGame;
 
 import com.badlogic.gdx.*;
 import com.badlogic.gdx.assets.loaders.resolvers.ExternalFileHandleResolver;
+import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.input.GestureDetector;
 import com.badlogic.gdx.input.GestureDetector.GestureListener;
+import com.badlogic.gdx.maps.MapLayers;
 import com.badlogic.gdx.maps.tiled.*;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
+import com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile;
+import com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.*;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.pcw.game.PCW;
@@ -30,6 +38,8 @@ public class InGameScreen implements Screen, InputProcessor, GestureListener {
     private Stage UIStage;
     private Group menuActors = new Group();
     private boolean menuRaised = false;
+    private String parentMode;
+    private String childMode;
     private InputMultiplexer im;
     private Game game;
     private OrthographicCamera gameCamera;
@@ -39,8 +49,10 @@ public class InGameScreen implements Screen, InputProcessor, GestureListener {
     private ScriptManager scriptmanager;
     Runtime runtime = Runtime.getRuntime();
 
-    public InGameScreen(Game thegame) {
+    public InGameScreen(Game thegame, String parentmode, String childmode) {
         game = thegame;
+        parentMode = parentmode;
+        childMode = childmode;
 
         // Camera setup.
         float w = Gdx.graphics.getWidth();
@@ -56,12 +68,14 @@ public class InGameScreen implements Screen, InputProcessor, GestureListener {
 //        UICamera.position.set(0f,0f,0f);
 
         // Tiled map stuff.
-        tiledMap = new TmxMapLoader(new ExternalFileHandleResolver()).load("PCW/maps/testmap.tmx");
+//        tiledMap = new TmxMapLoader(new ExternalFileHandleResolver()).load("PCW/maps/testmap.tmx");
+        tiledMap = new TiledMap();
         tiledMapRenderer = new OrthogonalTiledMapRenderer(tiledMap);
 
         // Initialise game mode script.
         scriptmanager = new ScriptManager();
-        scriptmanager.executeInit("Classic",
+        scriptmanager.executeInit(parentMode,
+                childMode,
                 this,
                 gameCamera,
                 gameStage,
@@ -85,6 +99,45 @@ public class InGameScreen implements Screen, InputProcessor, GestureListener {
         Gdx.input.setInputProcessor(im);
     }
 
+    public TiledMapTileLayer newMapLayer(String name, int w, int h, int cellsize) {
+        MapLayers layers = tiledMap.getLayers();
+        TiledMapTileLayer tileLayer = new TiledMapTileLayer(w, h, cellsize, cellsize);
+        tileLayer.setName(name);
+        layers.add(tileLayer);
+        for (int x = 0; x < w; x++) {
+            for (int y = 0; y < h; y++) {
+                // Fills the layer with cells - tiles should then be assigned to the cells in script.
+                TiledMapTileLayer.Cell cell = new TiledMapTileLayer.Cell();
+                tileLayer.setCell(x, y, cell);
+            }
+        }
+        return tileLayer;
+    }
+
+    public TiledMapTileSet newTileSet(String name) {
+        TiledMapTileSets sets = tiledMap.getTileSets();
+        TiledMapTileSet tileSet = new TiledMapTileSet();
+        tileSet.setName(name);
+        sets.addTileSet(tileSet);
+        return tileSet;
+    }
+
+    public StaticTiledMapTile newStaticTile(String path) {
+        FileHandle fh = new ExternalFileHandleResolver().resolve("PCW/" + path);
+        return new StaticTiledMapTile(new TextureRegion(new Texture(fh)));
+    }
+
+    public AnimatedTiledMapTile newAnimatedTile(float interval, String path) {
+        // should actually be an interval array.
+
+        FileHandle fh = new ExternalFileHandleResolver().resolve("PCW/" + path);
+        Array<StaticTiledMapTile> tiles = new Array<StaticTiledMapTile>();
+        //for each region in the TextureAtlas
+//        tiles.add(new StaticTiledMapTile(new TextureAtlas.AtlasRegion(fh, 0,0,0,0)));
+        //etc
+        return new AnimatedTiledMapTile(interval, tiles);
+    }
+
     public TiledMapTileLayer.Cell newCell() {
         return new TiledMapTileLayer.Cell();
     }
@@ -106,7 +159,7 @@ public class InGameScreen implements Screen, InputProcessor, GestureListener {
         try {
             theclass = Class.forName(classname);
         } catch (ClassNotFoundException e) {
-            System.out.println("Java reflection: Class not found! (" + e.toString() + ")");
+            System.out.println("Java reflection: ERROR! Class not found! (" + e.toString() + ")");
             return false;
         }
 
@@ -138,7 +191,7 @@ public class InGameScreen implements Screen, InputProcessor, GestureListener {
 
         // If there is no constructor then return...this whole approach seems like shit but let's see if it works.
         if (constructor == null) {
-            System.out.println("Java reflection: Could not find a " + simplename + " constructor with those "
+            System.out.println("Java reflection: ERROR! Could not find a " + simplename + " constructor with those "
                     + "parameters!");
             return false;
         }
@@ -151,22 +204,22 @@ public class InGameScreen implements Screen, InputProcessor, GestureListener {
                     + Arrays.toString(luaparams));
             return newobject;
         } catch (Exception e) {
-            System.out.println("Java reflection: Could not instantiate from " + simplename + " constructor! ("
-                    + e.toString() + ")\n Check that you're calling the right constructor and passing the right "
-                    + "objects!\n Parameters: " + Arrays.toString(luaparams));
+            System.out.println("Java reflection: ERROR! Could not instantiate from " + simplename + " constructor! ("
+                    + e.toString() + ")\n  Check that you're calling the right constructor and passing the right "
+                    + "objects!\n  Parameters: " + Arrays.toString(luaparams));
             return false;
         }
     }
 
-    public ChangeListener addChangeListener(Actor luawidget, Object luafunc, Object luaobject) {
+    public ChangeListener addChangeListener(Actor luawidget, Object luafunc, Object luaargs) {
         // You can pass an object in from Lua if you want to use a method on it; button, self[doX], self.
         final Object func = luafunc;
-        final Object obj = luaobject;
+        final Object args = luaargs;
         ChangeListener lis;
         luawidget.addListener(lis = new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                ScriptManager.executeFunction("Classic", "runlistener", func, obj, event, actor);
+                ScriptManager.executeFunction(parentMode, "runlistener", func, args, event, actor);
             }
         });
         return lis;
@@ -194,7 +247,7 @@ public class InGameScreen implements Screen, InputProcessor, GestureListener {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         // Run game mode script regular loop.
-        scriptmanager.executeFunction("Classic", "loop", delta);
+        scriptmanager.executeFunction(parentMode, "loop", delta);
         gameCamera.update();
         tiledMapRenderer.setView(gameCamera);
         tiledMapRenderer.render();
@@ -246,42 +299,42 @@ public class InGameScreen implements Screen, InputProcessor, GestureListener {
 
     @Override
     public boolean keyDown(int keycode) {
-        return scriptmanager.executeFunction("Classic", "keyDown", keycode);
+        return scriptmanager.executeFunction(parentMode, "keyDown", keycode);
     }
 
     @Override
     public boolean keyUp(int keycode) {
-        return scriptmanager.executeFunction("Classic", "keyUp", keycode);
+        return scriptmanager.executeFunction(parentMode, "keyUp", keycode);
     }
 
     @Override
     public boolean keyTyped(char character) {
-        return scriptmanager.executeFunction("Classic", "keyTyped", character);
+        return scriptmanager.executeFunction(parentMode, "keyTyped", character);
     }
 
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-        return scriptmanager.executeFunction("Classic", "touchDown", screenX, screenY, pointer, button);
+        return scriptmanager.executeFunction(parentMode, "touchDown", screenX, screenY, pointer, button);
     }
 
     @Override
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-        return scriptmanager.executeFunction("Classic", "touchUp", screenX, screenY, pointer, button);
+        return scriptmanager.executeFunction(parentMode, "touchUp", screenX, screenY, pointer, button);
     }
 
     @Override
     public boolean touchDragged(int screenX, int screenY, int pointer) {
-        return scriptmanager.executeFunction("Classic", "touchDragged", screenX, screenY, pointer);
+        return scriptmanager.executeFunction(parentMode, "touchDragged", screenX, screenY, pointer);
     }
 
     @Override
     public boolean mouseMoved(int screenX, int screenY) {
-        return scriptmanager.executeFunction("Classic", "mouseMoved", screenX, screenY);
+        return scriptmanager.executeFunction(parentMode, "mouseMoved", screenX, screenY);
     }
 
     @Override
     public boolean scrolled(int amount) {
-        return scriptmanager.executeFunction("Classic", "scrolled", amount);
+        return scriptmanager.executeFunction(parentMode, "scrolled", amount);
     }
 
     // Touch gesture detector events below.
@@ -294,41 +347,41 @@ public class InGameScreen implements Screen, InputProcessor, GestureListener {
 
     @Override
     public boolean tap(float x, float y, int count, int button) {
-        return scriptmanager.executeFunction("Classic", "tap", x, y, count, button);
+        return scriptmanager.executeFunction(parentMode, "tap", x, y, count, button);
     }
 
     @Override
     public boolean longPress(float x, float y) {
-        return scriptmanager.executeFunction("Classic", "longPress", x, y);
+        return scriptmanager.executeFunction(parentMode, "longPress", x, y);
     }
 
     @Override
     public boolean fling(float velocityX, float velocityY, int button) {
-        return scriptmanager.executeFunction("Classic", "fling", velocityX, velocityY, button);
+        return scriptmanager.executeFunction(parentMode, "fling", velocityX, velocityY, button);
     }
 
     @Override
     public boolean pan(float x, float y, float deltaX, float deltaY) {
-        return scriptmanager.executeFunction("Classic", "pan", x, y, deltaX, deltaY);
+        return scriptmanager.executeFunction(parentMode, "pan", x, y, deltaX, deltaY);
     }
 
     @Override
     public boolean panStop(float x, float y, int pointer, int button) {
-        return scriptmanager.executeFunction("Classic", "panStop", x, y, pointer, button);
+        return scriptmanager.executeFunction(parentMode, "panStop", x, y, pointer, button);
     }
 
     @Override
     public boolean zoom(float initialDistance, float distance) {
-        return scriptmanager.executeFunction("Classic", "zoom", initialDistance, distance);
+        return scriptmanager.executeFunction(parentMode, "zoom", initialDistance, distance);
     }
 
     @Override
     public boolean pinch(Vector2 initialPointer1, Vector2 initialPointer2, Vector2 pointer1, Vector2 pointer2) {
-        return scriptmanager.executeFunction("Classic", "pinch", initialPointer1, initialPointer2, pointer1, pointer2);
+        return scriptmanager.executeFunction(parentMode, "pinch", initialPointer1, initialPointer2, pointer1, pointer2);
     }
 
     @Override
     public void pinchStop() {
-        scriptmanager.executeFunction("Classic", "pinchStop");
+        scriptmanager.executeFunction(parentMode, "pinchStop");
     }
 }

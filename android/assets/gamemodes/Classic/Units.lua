@@ -5,14 +5,14 @@ local java
 local map
 local teamunits
 
--- This doesn't really hold anything permanently. It's used to help push statics into classes, then wiped.
+-- This doesn't hold anything permanently. It's used to help push statics into classes, then wiped.
 local statics = {}
 
 local u = {}  -- Public.
 
-function u.init(gameScreen, theMap, teamUnits)
+function u.init(gameScreen, unitMap, teamUnits)
   java = gameScreen
-  map = theMap
+  map = unitMap
   teamunits = teamUnits
 end
 
@@ -20,10 +20,9 @@ local Unit = class()
 function Unit:init(x, y, teamID)
   self.actor = java:addLuaActor(self.sprite, 1.0)
   -- Store the coordinates. These are grabbed by functions in Map and World.
-  self.x = x
-  self.y = y
+  self.pos = Vector2(x, y)
   -- Place the unit.
-  self.actor:setPosition(map:long(x), map:long(y))
+  self:updateActor(self.pos)
   
   -- Store the unit reference for direct lookup in a 2D array of the grid.
   map:storeUnitRef(self)
@@ -48,8 +47,12 @@ function Unit:init(x, y, teamID)
   self.movesleft = self.maxmoves  -- This is set a lot, but only checked at selection to make sure you can still move. So, 0 = "ordered".
   self.isBoarded = false
 end
-function Unit:getHP()
-  return self.MAXHP
+function Unit:updateActor(vector)
+  self.actor:setPosition(map:long(vector.x), map:long(vector.y))
+end
+function Unit:getHp()
+  -- Round up HP to ints from 1-10.
+  return math.ceil((self.hp / self.MAXHP) * 10)
 end
 function Unit:takeDamage(x)
   self.hp = self.hp - x
@@ -85,6 +88,9 @@ end
 function Unit:getFuel()
   return self.fuel
 end
+function Unit:setFuel(x)
+  self.fuel = x
+end
 function Unit:resupply()
   self.fuel = self.MAXFUEL
   for i,wep in ipairs(self.weps) do
@@ -111,9 +117,15 @@ function Unit:wait()
   -- Update grid reference on this valid position.
   map:storeUnitRef(self)
 end
+function Unit:restore()
+  -- Restore moves and reset tint.
+  self.maxmoves = self:getmoves()
+  self.movesleft = self.maxmoves
+  self.actor:resetTint()
+  --you could burn fuel here for aircraft (or wait until your next turn like AW to allow 0-fuel autosupplies and block/counter).
+end
 function Unit:board(transport)
-  self.x = nil
-  self.y = nil
+  self.pos = nil
   self.isBoarded = true
   
   self.actor:hide()
@@ -124,23 +136,15 @@ function Unit:board(transport)
   --boarding animation(lightshafts)/noise, show boarded icon on APC
 end
 function Unit:disembark(transport)
-  self.x = transport.x
-  self.y = transport.y
+  self.pos = transport.pos
   self.isBoarded = false
-  self.actor:setPosition(map:long(self.x), map:long(self.y))
+  self:updateActor(self.pos)
   
   self.actor:show()
   table.remove(transport.boardedunits, self.boardnumber)  --here's a bug for u. inf1 boards and inf2 boards. inf1 leaves. inf2 is now in 1.
   --so u need to rethink this system and rename the entry u use to check for boarded units while ur at it.
   --same is true of die(), or any table.remove().
   self.boardnumber = nil
-end
-function Unit:restore()
-  -- Restore moves and reset tint.
-  self.maxmoves = self:getmoves()
-  self.movesleft = self.maxmoves
-  self.actor:resetTint()
-  --you could burn fuel here for aircraft (or wait until your next turn like AW to allow 0-fuel autosupplies and block/counter).
 end
 function Unit:getmoves()
   if self.fuel > self.MOVERANGE then
@@ -149,37 +153,42 @@ function Unit:getmoves()
     return self.fuel
   end
 end
-function Unit:move(x, y)
+function Unit:move(dest)
   -- Deduct spaces moved, and burn fuel.
-  self.movesleft = self.movesleft - map:mandist(self.x - x, self.y - y)
+  self.movesleft = self.movesleft - self.pos:mandist(dest)
   self:burnfuel(self:movesused())
   -- Update coordinates, but don't store new coordinates yet. You may end up off the grid (boarded).
   map:killUnitRef(self)
-  self.x = x
-  self.y = y
+  self.pos = dest
   -- Then move the unit with an animation. (At the moment there is no animation.)
   --animatemove
-  self.actor:setPosition(map:long(x), map:long(y))
+  self:updateActor(dest)
 end
-function Unit:snapback(x, y)
+function Unit:snapback(dest)
   -- Kill ref in case it was set by a wait(); i.e. when rewinding the replay. Not necessary when simply demoving, as the ref was killed.
   -- The method itself will ensure that you don't kick a boarded transport off the grid by accident.
   map:killUnitRef(self)
   -- Restore moves, update the grid reference, and move back.
   self.movesleft = self.maxmoves
-  self.x = x
-  self.y = y
+  self.pos = dest
   map:storeUnitRef(self)
-  self.actor:setPosition(map:long(x), map:long(y))
+  self:updateActor(dest)
 end
-function Unit:battle(target, wepindex, defstars)
-  -- Round up HP to ints from 1-10, then convert to percentage strengths for battle calculation.
-  local atkstrength = math.ceil((self.hp / self.MAXHP) * 10) / 10
-  local defstrength = math.ceil((target.hp / target.MAXHP) * 10) / 10
+function Unit:battle(target, wepindex)
+  -- Converts effective HP to a percentage strength for battle calculation.
+  local atkstrength = self:getHp() / 10
+  local defstrength = target:getHp() / 10
   local weapon = self.weps[wepindex]
   -- Look up the modifier for the ammo type on the defender's armour.
   local armourpenalty = g.AMMOMOD[weapon.AMMOTYPE][target.ARMOUR]
-  -- Terrain defences subtract 10% damage for each star, but the effect is proportional to the defender's strength.
+  -- Terrain defences subtract 10% of damage for each star, but the effect is proportional to the defender's strength.
+  local defstars
+  -- And defences do not apply to air units.
+  if g.set(u.AIR_UNITS)[target:getClass()] then
+    defstars = 0
+  else
+    defstars = map:getDefence(target.pos)
+  end
   local terrainpenalty = (1 - (0.1 * defstars * defstrength))
   
   local damage = atkstrength * weapon.DAMAGE * armourpenalty * terrainpenalty
@@ -190,7 +199,7 @@ function Unit:battle(target, wepindex, defstars)
 end
 function Unit:validweps(target, indirectallowed)
   local weplist = {}
-  local dist = map:mandist(self.x - target.x, self.y - target.y)
+  local dist = self.pos:mandist(target.pos)
   
   for i,wep in ipairs(self.weps) do
     -- Conditions:
@@ -207,6 +216,9 @@ function Unit:validweps(target, indirectallowed)
   end
   
   return weplist
+end
+function Unit:getClass()
+  return self.class
 end
 
 local wep = {}
@@ -275,11 +287,12 @@ statics = {
 }
 g.addPairs(u.Infantry, statics)
 function u.Infantry:init(x, y, teamID)
-  self.sprite = "PCW/unit_sprites/Default/inf_red_1.png"
+  self.sprite = "PCW/unitAssets/Default/inf_red_1.png"
   if teamID == g.TEAMS.BLUE then
-    self.sprite = "PCW/unit_sprites/Default/inf_blue_1.png"
+    self.sprite = "PCW/unitAssets/Default/inf_blue_1.png"
   end
-
+  self.class = u.Infantry
+  
   Unit.init(self, x, y, teamID)
 end
 
@@ -301,8 +314,9 @@ g.addPairs(u.APC, statics)
 function u.APC:init(x, y, teamID)
   --Ideally you will use ipairs on this array.
   self.boardedunits = {}
-  self.sprite = "PCW/unit_sprites/Default/apc_red.png"
-
+  self.sprite = "PCW/unitAssets/Default/apc_red.png"
+  self.class = u.APC
+  
   Unit.init(self, x, y, teamID)
 end
 function u.APC:die()
@@ -318,5 +332,18 @@ end
 --well no because of grid refs and shit. ughhhhhhhhhhh.
 
 statics = nil
+
+u.UNITS = {
+  u.Infantry,
+  u.APC
+}
+u.GROUND_UNITS = {
+  u.Infantry,
+  u.APC
+}
+u.SEA_UNITS = {
+}
+u.AIR_UNITS = {
+}
 
 return u

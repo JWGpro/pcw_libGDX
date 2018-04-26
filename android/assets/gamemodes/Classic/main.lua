@@ -1,28 +1,29 @@
 --At some point I'll have to put a list of methods, and objects, or how to find them in the libGDX API reference.
 --Code completion doesn't really work here for them, lol.
---"Attempt to call table" could mean you are trying to do "for k,v in table" - you need pairs(table) or ipairs(table).
 
 --Everything should use short coords where possible.
 --They need to be converted to long for passing to actors. Could override the Java method, but you'd have to do it with a cellsize param.
 
+local modepath = "PCW/gamemodes/Classic"
 local world
 local inputmap
 
 local lastX local lastY
 
-function init(gameScreen, gameCamera, gameStage, uiCamera, uiStage, tiledMap, externalDir, inputKeys, inputButtons)
+function init(childmode, gameScreen, gameCamera, gameStage, uiCamera, uiStage, tiledMap, externalDir, inputKeys, inputButtons)
   -- Initialise everything here to prevent any possibility of hanging later!
-  package.path =  externalDir .. "PCW/gamemodes/Classic/?.lua;" .. package.path
-  local w = require "World"
-  local im = require "InputMap"
+  package.path =  externalDir .. modepath .. "/?.lua;" .. package.path
+  -- Loads the appropriate World and InputMap for the child mode (Play/MapEditor/ReplayViewer).
+  local w = require(childmode .. "/World")
+  local im = require(childmode .. "/InputMap")
   world = w.World(gameScreen, gameCamera, tiledMap, externalDir, uiStage)
   inputmap = im.InputMap(world, inputKeys, inputButtons)
 end
 
-function runlistener(func, object, event, actor)
+function runlistener(func, args, event, actor)
   --Runs a listener function (usually from a button) and passes in an object in case it's an instance method.
   --That's the same as object:func() in that case, but for some reason that doesn't work. Maybe due to how the function is passed?
-  func(object)
+  func(args)
 end
 
 function loop(delta)

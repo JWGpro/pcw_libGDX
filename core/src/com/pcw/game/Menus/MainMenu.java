@@ -7,6 +7,7 @@ import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.utils.Align;
+import com.pcw.game.InGame.InGameScreen;
 import com.pcw.game.PCW;
 
 public class MainMenu extends Menu {
@@ -39,22 +40,22 @@ public class MainMenu extends Menu {
         });
         stage.addActor(playButton);
 
-        // Options menu button.
-        TextButton optionsButton = new TextButton("Options",PCW.gameSkin);
-        optionsButton.setWidth(Gdx.graphics.getWidth()/2);
-        optionsButton.setPosition(Gdx.graphics.getWidth()/2-optionsButton.getWidth()/2,Gdx.graphics.getHeight()/4-optionsButton.getHeight()/2);
-        optionsButton.addListener(new InputListener(){
+        // Map Editor button.
+        TextButton editorButton = new TextButton("Map Editor",PCW.gameSkin);
+        editorButton.setWidth(Gdx.graphics.getWidth()/2);
+        editorButton.setPosition(Gdx.graphics.getWidth()/2-editorButton.getWidth()/2,Gdx.graphics.getHeight()/4-editorButton.getHeight()/2);
+        editorButton.addListener(new InputListener(){
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button) {
                 dispose();
-                game.setScreen(new OptionsMenu(game));
+                game.setScreen(new InGameScreen(game, "Classic", "MapEditor"));
             }
             @Override
             public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
                 return true;
             }
         });
-        stage.addActor(optionsButton);
+        stage.addActor(editorButton);
 
     }
 
