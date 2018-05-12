@@ -22,8 +22,8 @@ function u.InputMap:init(World, inputKeys, inputButtons)
   inp.keyDown[KEYS.MINUS] = world.ReplayUndo
   inp.keyDown[KEYS.EQUALS] = world.ReplayRedo
   inp.keyDown[KEYS.BACKSPACE] = world.ReplayResume
-  inp.keyDown[KEYS.NUM_9] = world.SaveMap
-  inp.keyDown[KEYS.NUM_0] = world.LoadMap
+  inp.keyDown[KEYS.J] = world.SaveMap
+  inp.keyDown[KEYS.K] = world.LoadMap
 
   inp.keyUp = {}
 

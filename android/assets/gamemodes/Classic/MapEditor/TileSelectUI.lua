@@ -2,6 +2,7 @@ require "class"
 local g = require "Globals"
 local ter = require "Terrains"
 local terrains = ter.terrains
+local terrainlist = ter.terrainList
 
 local u = {}  -- Public.
 
@@ -11,6 +12,7 @@ local uistage
 local terrainset
 
 local activetile = terrains.PLAIN
+local activeteam = g.TEAMS.NEUTRAL
 local atb
 local tilelist
 
@@ -50,16 +52,21 @@ function u.TileSelectUI:init(gameScreen, skin, externalDir, uiStage, terrainSet)
   uistage = uiStage
   terrainset = terrainSet
   
-  -- Creating the terrain and unit selection list.
+  -- Creating the terrain/unit selection list.
   tilelist = java:reflect("com.badlogic.gdx.scenes.scene2d.ui.Table",
     {}, {})
   tilelist:setFillParent(true)
-  for _,vals in pairs(terrains) do
+  local i = 0
+  for _,terrain in ipairs(terrainlist) do
     local button = java:reflect("com.badlogic.gdx.scenes.scene2d.ui.TextButton",
-      {"String", "Skin"}, {vals.NAME, skin})
-    tilelist:add(button)
-    tilelist:row() --ofc not but just roll w/ it
-    java:addChangeListener(button, setActiveTile, vals)
+      {"String", "Skin"}, {terrain.NAME, skin})
+    tilelist:add(button):width(button:getPrefWidth() * 0.5):height(button:getPrefHeight() * 0.5)
+    java:addChangeListener(button, setActiveTile, terrain)
+    i = i + 1
+    if i == 3 then
+      tilelist:row()
+      i = 0
+    end
   end
   
   -- Now for the active tile button.
@@ -79,6 +86,10 @@ end
 
 function u.TileSelectUI:getActiveTile()
   return activetile
+end
+
+function u.TileSelectUI:getActiveTeam()
+  return activeteam
 end
 
 

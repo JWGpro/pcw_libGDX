@@ -47,8 +47,8 @@ function u.World:init(gameScreen, gameCamera, tiledMap, externalDir, uiStage)
   --u need to dispose of this Skin.
   --highly recommend you investigate the AssetManager.
   
-  terrainmap = tm.TerrainMap(50, 50, gameScreen)  -- load a map here. either in init() or call loadMap().
-  terrainmap:loadMap()  --le wacky not how u do this faec
+  terrainmap = tm.TerrainMap(30, 20, gameScreen)  -- load a map here. either in init() or call loadMap().
+  terrainmap:loadMap(externalDir .. "PCW/maps/test_tbl.map")
   unitmap = um.UnitMap(gameScreen, terrainmap, teamunits)
   
   actionmenu = am.ActionMenu(gameScreen, skin, uiStage, actionfuncs)

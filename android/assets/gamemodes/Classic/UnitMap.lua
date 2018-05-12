@@ -64,11 +64,11 @@ function u.UnitMap:init(gameScreen, terrainMap, teamUnits)
   end
   
   units.init(gameScreen, self, teamUnits)
-  local inf1 = units.Infantry(12, 12, g.TEAMS.BLUE)
-  local inf2 = units.Infantry(16, 16, g.TEAMS.BLUE)
-  local inf3 = units.Infantry(15, 15, g.TEAMS.RED)
-  local apc1 = units.APC(16, 15, g.TEAMS.RED)
-  local inf4 = units.Infantry(49, 49, g.TEAMS.RED)
+  local inf1 = units.Infantry(9, 9, g.TEAMS.BLUE)
+  local inf2 = units.Infantry(12, 12, g.TEAMS.BLUE)
+  local inf3 = units.Infantry(14, 11, g.TEAMS.RED)
+  local apc1 = units.APC(16, 11, g.TEAMS.RED)
+  local inf4 = units.Infantry(18, 9, g.TEAMS.RED)
   
 end
 
@@ -110,9 +110,9 @@ function u.UnitMap:displayRanges(selunit)
   -- Attack ranges:
   
   -- Iterate over weapons.
-  for i,wep in ipairs(selunit.weps) do
+  for _,wep in ipairs(selunit.weps) do
     -- Iterate over the movement range cells.
-    for vec,v in pairs(rangetables.mdestinationcells) do
+    for vec,_ in pairs(rangetables.mdestinationcells) do
       -- Proceed if weapon is direct, or cell is the starting location (for indirect weapons).
       if wep.DIRECT or vec:equals(selunit.pos) then
         -- New table for targets from this cell. One for each valid movement cell.
@@ -120,13 +120,13 @@ function u.UnitMap:displayRanges(selunit)
         -- Get the attack range from the movement cell.
         local acells = self:manrange(vec, wep.MINRANGE, wep.MAXRANGE)
         -- Iterate over attack range cells.
-        for i,vec in pairs(acells) do
+        for _,tgt in pairs(acells) do
           -- Tile cell with an attack range tile.
-          local cell = ATTACKRANGE_LAYER:getCell(vec.x, vec.y)
+          local cell = ATTACKRANGE_LAYER:getCell(tgt.x, tgt.y)
           cell:setTile(TILES.attackrangecells)
-          rangetables.attackrangecells[vec] = cell
+          rangetables.attackrangecells[tgt] = cell
           -- Get target and add it to the table.
-          local target = grid[vec.x][vec.y].unit
+          local target = grid[tgt.x][tgt.y].unit
           if target and (target.team ~= selunit.team) then --or ally. and armour is hittable.
             table.insert(grid[vec.x][vec.y].targets, target)
           end

@@ -12,6 +12,7 @@ local pri = {}  -- Selection functions.
 -- Constants
 local STATES = {DEFAULT = 1, SELECTED = 2, MOVED = 3, ACTING = 4}
 
+local extdir
 local terrainmap -- Contains the terrain.
 local unitmap  -- Contains the grid, handles Units, talks to the ActionMenu.
 local tileui
@@ -38,6 +39,8 @@ end
 
 u.World = class()
 function u.World:init(gameScreen, gameCamera, tiledMap, externalDir, uiStage)
+  extdir = externalDir
+  
   local fh = gameScreen:reflect("com.badlogic.gdx.files.FileHandle",
     {"String"}, {externalDir .. "PCW/menuskins/Glassy/glassy-ui.json"})
   local skin = gameScreen:reflect("com.badlogic.gdx.scenes.scene2d.ui.Skin",
@@ -45,7 +48,7 @@ function u.World:init(gameScreen, gameCamera, tiledMap, externalDir, uiStage)
   --u need to dispose of this Skin.
   --highly recommend you investigate the AssetManager.
   
-  terrainmap = tm.TerrainMap(50, 50, gameScreen)
+  terrainmap = tm.TerrainMap(30, 20, gameScreen)
   unitmap = um.UnitMap(gameScreen, terrainmap, teamunits)  --mainly got this to keep the cursor in check.
   tileui = tui.TileSelectUI(gameScreen, skin, externalDir, uiStage, terrainmap:getTerrainSet())
   
@@ -87,7 +90,8 @@ function u.World:PlaceTile()
   local curY = unitmap:short(cursor.actor:getY())
   
   local activetile = tileui:getActiveTile()
-  terrainmap:setTerrain(curX, curY, activetile)
+  local activeteam = tileui:getActiveTeam()
+  terrainmap:setTerrain(curX, curY, activetile, activeteam)
   
   --could be units, so needs to be able to move onto the terrain there.
 end
@@ -128,11 +132,11 @@ function u.World:ReplayResume()
 end
 
 function u.World:SaveMap()
-  terrainmap:saveMap()
+  terrainmap:saveMap(extdir .. "PCW/maps/test_tbl.map")
 end
 
 function u.World:LoadMap()
-  terrainmap:loadMap()
+  terrainmap:loadMap(extdir .. "PCW/maps/test_tbl.map")
 end
 
 return u

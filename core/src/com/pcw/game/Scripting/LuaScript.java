@@ -132,11 +132,13 @@ public class LuaScript implements Script {
 
                 // Give suggestions for common errors.
                 if (lastline.contains("userdata expected")) {
-                    lastline = lastline + " [Suggestion: did you just try to call a Java method from Lua" +
+                    lastline = lastline + "\n [Suggestion: did you just try to call a Java method from Lua" +
                             " with a dot instead of a colon?]";
                 } else if (lastline.contains("attempt to call table")) {
-                    lastline = lastline + " [Suggestion: did you just type 'for k,v in table'" +
-                            " instead of 'for k,v in pairs(table)'?]";
+                    lastline = lastline + "\n [Suggestion: did you just type 'for k,v in table'" +
+                            " instead of 'for k,v in pairs(table)'?" +
+                            "\n Or you may have tried to call a class's constructor on an existing object" +
+                            " or something?]";
                 }
                 Gdx.app.log("Debug", "LUA EXECUTE ERROR! " + lastline);
                 return false;

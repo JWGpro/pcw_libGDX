@@ -92,7 +92,7 @@ end
 function g.hasVector2key(table, vec)
   -- Assumes that the table's keys are entirely Vector2s, then checks them against the passed vector.
   for k,v in pairs(table) do
-    if (k[1] == vec[1]) and (k[2] == vec[2]) then
+    if k:equals(vec) then
       return true
     else
       return false

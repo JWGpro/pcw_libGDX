@@ -180,6 +180,7 @@ end
 ter.Headquarters = class(Property)
 statics = {
   NAME = "HQ",
+  CLASS = ter.Headquarters,
   ID = 9,
   PATH = "hq_red.png",
   DEFENCE = 4,
@@ -200,6 +201,7 @@ g.addPairs(ter.Headquarters, statics)
 ter.City = class(Property)
 statics = {
   NAME = "City",
+  CLASS = ter.City,
   ID = 10,
   PATH = "city_neutral.png",
   DEFENCE = 3,
@@ -220,6 +222,7 @@ g.addPairs(ter.City, statics)
 ter.Factory = class(Property)
 statics = {
   NAME = "Factory",
+  CLASS = ter.Factory,
   ID = 11,
   PATH = "factory_neutral.png",
   DEFENCE = 3,
@@ -241,6 +244,7 @@ g.addPairs(ter.Factory, statics)
 ter.Port = class(Property)
 statics = {
   NAME = "Port",
+  CLASS = ter.Port,
   ID = 12,
   PATH = "port_neutral.png",
   DEFENCE = 3,
@@ -262,6 +266,7 @@ g.addPairs(ter.Port, statics)
 ter.Airfield = class(Property)
 statics = {
   NAME = "Airfield",
+  CLASS = ter.Airfield,
   ID = 13,
   PATH = "airfield_neutral.png",
   DEFENCE = 3,

@@ -1,4 +1,6 @@
 require "class"
+local binser = require "binser"
+
 local g = require "Globals"
 local ter = require "Terrains"
 local terrains = ter.terrains
@@ -18,16 +20,17 @@ function u.TerrainMap:init(w, h, gameScreen)
   terrainLayer = java:newMapLayer("terrain", w, h, 16)
   -- Generate the terrain tileset.
   terrainSet = java:newTileSet("terrain")
-  for str,vals in pairs(terrains) do
-    local tile = java:newStaticTile("terrainAssets/Default/" .. vals.PATH)
-    terrainSet:putTile(vals.ID, tile)
+  for _,terrain in pairs(terrains) do
+    local tile = java:newStaticTile("terrainAssets/Default/" .. terrain.PATH)
+    terrainSet:putTile(terrain.ID, tile)
+    local resource = binser.registerResource(terrain, terrain.NAME)
   end
   
   -- Init grid and terrain.
   for x=0, w-1 do
     grid[x] = {}
     for y=0, h-1 do
-      self:setTerrain(x, y, terrains.SEA)
+      self:setTerrain(x, y, terrains.SEA, nil)
     end
   end
   
@@ -37,10 +40,10 @@ function u.TerrainMap:getTerrain(vector)
   return grid[vector.x][vector.y]
 end
 
-function u.TerrainMap:setTerrain(x, y, terrain)
+function u.TerrainMap:setTerrain(x, y, terrain, team)
   
   if terrain.IS_PROPERTY then
-    grid[x][y] = terrain(x, y, g.TEAMS.NEUTRAL)  --actually the team selected in the active tile menu.
+    grid[x][y] = terrain(x, y, team)
   else
     grid[x][y] = terrain
   end
@@ -52,7 +55,7 @@ end
 function u.TerrainMap:fill(terrain)
   for x,ytable in ipairs(grid) do
     for y,_ in ipairs(ytable) do
-      self:setTerrain(x, y, terrain)
+      self:setTerrain(x, y, terrain, nil) -- team is passed from World, in turn received from TileSelectUI.
     end
   end
 end
@@ -75,37 +78,42 @@ function u.TerrainMap:getTerrainSet()
   return terrainSet
 end
 
-require "SaveTableToFile"
-
-function u.TerrainMap:saveMap()
-  print("Saving map...")
-  assert(table.save(grid, "test_tbl.lua") == nil)
+function u.TerrainMap:saveMap(dir)
+  print("Saving map to " .. dir .. "...")
+  local map = {}
+  for x=0, #grid do
+    map[x] = {}
+    for y=0, #grid[0] do
+      local terrain = self:getTerrain(Vector2(x,y))
+      if terrain.IS_PROPERTY then
+        map[x][y] = {terrain = terrain.CLASS, team = terrain.team}  -- terrain table plus team.
+      else
+        map[x][y] = {terrain = terrain}
+      end
+    end
+  end
+  binser.writeFile(dir, map)
 end
-
-function u.TerrainMap:loadMap()
-  print("Loading map...")
-  local loadgrid,err = table.load("test_tbl.lua")
-  assert(err == nil)
+function u.TerrainMap:loadMap(dir)
+  print("Loading map from " .. dir .. "...")
+  local results, len = binser.readFile(dir)
+  assert(len == 1)
+  local map = results[1]
   
   --ok, this should work for loading larger maps. (actually, you would need to make new Cells...)
   --what about smaller maps? you will have to at least nil the cells remaining in grid so they don't show up.
-  for x=0, #loadgrid do
+  for x=0, #map do
     if not grid[x] then
       grid[x] = {}
     end
-    for y=0, #loadgrid[0] do
-      self:setTerrain(x, y, loadgrid[x][y])
+    for y=0, #map[0] do
+      local coord = map[x][y]
+      self:setTerrain(x, y, coord.terrain, coord.team)  -- coord.team is nil for static terrains.
     end
   end
   
-  --temporary addition of cities.
-  self:setTerrain(10, 10, terrains.City)
-  self:setTerrain(12, 10, terrains.City)
-  self:setTerrain(13, 10, terrains.Factory)
-  self:setTerrain(12, 11, terrains.Port)
-  
 end
-  
+
 
 --select multiple, fill selection, copy selection, and paste!
 --symmetry too.

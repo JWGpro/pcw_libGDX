@@ -184,7 +184,7 @@ function Unit:battle(target, wepindex)
   -- Terrain defences subtract 10% of damage for each star, but the effect is proportional to the defender's strength.
   local defstars
   -- And defences do not apply to air units.
-  if g.set(u.AIR_UNITS)[target:getClass()] then
+  if g.set(u.AIR_UNITS)[target.CLASS] then
     defstars = 0
   else
     defstars = map:getDefence(target.pos)
@@ -216,9 +216,6 @@ function Unit:validweps(target, indirectallowed)
   end
   
   return weplist
-end
-function Unit:getClass()
-  return self.class
 end
 
 local wep = {}
@@ -276,6 +273,7 @@ end
 u.Infantry = class(Unit)
 statics = {
   NAME = "Infantry",
+  CLASS = u.Infantry,
   COST = 1000,
   MOVERANGE = 3,
   MOVETYPE = g.MOVETYPES.INF,
@@ -291,7 +289,6 @@ function u.Infantry:init(x, y, teamID)
   if teamID == g.TEAMS.BLUE then
     self.sprite = "PCW/unitAssets/Default/inf_blue_1.png"
   end
-  self.class = u.Infantry
   
   Unit.init(self, x, y, teamID)
 end
@@ -299,6 +296,7 @@ end
 u.APC = class(Unit)
 statics = {
   NAME = "APC",
+  CLASS = u.APC,
   COST = 4000,
   MOVERANGE = 6,
   MOVETYPE = g.MOVETYPES.TRACK,
