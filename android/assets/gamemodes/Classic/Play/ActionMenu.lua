@@ -33,11 +33,6 @@ function u.ActionMenu:init(gameScreen, skin, uiStage, actionfuncs)
   end
 end
 
-function u.ActionMenu:displayActions(map, selunit)
-  -- Ask the map to evaluate the state for you.
-  map:evaluateActions(self, selunit)
-end
-
 function u.ActionMenu:showaction(action)
   --Get button.
   local button = actionbuttons[action]

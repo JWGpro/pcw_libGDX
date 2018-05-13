@@ -94,10 +94,14 @@ function u.SupplyCommand:init(unit, targets)
   self:execute()
 end
 function u.SupplyCommand:execute()
-  self.unit:supply()
+  for _,target in pairs(self.targets) do
+    target:resupply()
+  end
+  self.unit:wait()
 end
 function u.SupplyCommand:undo()
-  --reset each target supply
+  --for each target setSupply(supplies)
+  self.unit:restore()
 end
 
 u.BuildCommand = class(Command)

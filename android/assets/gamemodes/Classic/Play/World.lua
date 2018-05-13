@@ -200,7 +200,7 @@ end
 function pri.moveunit(vector)
   unitmap:hideRanges()
   moveCommand = com.MoveCommand(selunit, vector)
-  actionmenu:displayActions(unitmap, selunit)
+  pri.evaluateActions()
   state = STATES.MOVED
 end
 
@@ -232,7 +232,7 @@ function pri.demove()
 end
 
 function pri.deaction()
-  actionmenu:displayActions(unitmap, selunit)
+  pri.evaluateActions()
   unitmap:hideRanges()
   state = STATES.MOVED
 end
@@ -249,6 +249,47 @@ end
 -----------------------------
 --should these (and the move/action Commands) belong to Units?
 --probably not these functions. but the Commands?...
+
+function pri.evaluateActions()
+  -- Show available actions after a move, based on evaluation of the current state.
+  
+  -- Board:
+  -- If on boardable unit, show Board. Otherwise, evaluate the other actions - which includes the mutually exclusive Wait.
+  if unitmap:isBoardable(selunit.pos) then
+    actionmenu:showaction(g.ACTS.BOARD)
+  else
+    -- Capture:
+    local prop = terrainmap:getTerrain(selunit.pos)
+    if prop.IS_PROPERTY and prop.team ~= selunit.team then
+      actionmenu:showaction(g.ACTS.CAPTURE)
+    end
+    -- Attack:
+    local targets = unitmap:getTargets(selunit.pos)
+    if targets and (#targets > 0) then  --what?
+      actionmenu:showaction(g.ACTS.ATTACK)
+    end
+    -- Unload:
+    --(may want to check terrain - be a bit silly if tanks try to unload in the sea and just have to cancel.)
+    if selunit.BOARDABLE and (#selunit.boardedunits > 0) then
+      actionmenu:showaction(g.ACTS.UNLOAD)
+    end
+    -- Supply:
+    if selunit.SUPPLIES then
+      local allies = false
+      for _,neighbour in pairs(unitmap:neighbourCells(selunit.pos)) do
+        local unit = unitmap:getUnit(neighbour)
+        if unit and unit.team == selunit.team then  --and can supply the ally
+          allies = true
+        end
+      end
+      if allies then
+        actionmenu:showaction(g.ACTS.SUPPLY)
+      end
+    end
+    
+    actionmenu:showaction(g.ACTS.WAIT)
+  end
+end
 
 function actionfuncs.Attack()
   state = STATES.ACTING
@@ -276,9 +317,13 @@ function actionfuncs.Capture()
   pri.endMove(actionCommand)
 end
 function actionfuncs.Supply()
-  --for ally in pairs(allies) do ally:resupply() end
-  --check neighbours - might apply to A* too, so implement that before this.
-  local targets
+  local targets = {}
+  for _,neighbour in pairs(unitmap:neighbourCells(selunit.pos)) do
+    local target = unitmap:getUnit(neighbour)
+    if target and target.team == selunit.team then
+      table.insert(targets, target)
+    end
+  end
   local actionCommand = com.SupplyCommand(selunit, targets)
   pri.endMove(actionCommand)
 end

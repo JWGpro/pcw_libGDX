@@ -305,6 +305,7 @@ statics = {
   ARMOUR = g.ARMOURS.H_VEH,
   WEPS = {},
   
+  SUPPLIES = true,
   BOARDABLE = g.set{u.Infantry.NAME},
   BOARDCAP = 1
 }

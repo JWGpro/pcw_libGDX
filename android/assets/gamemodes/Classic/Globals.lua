@@ -133,8 +133,7 @@ g.ACTS = {
   BOARD = "Board",
   DEPLOY = "Deploy",
   UNLOAD = "Unload",
-  JOIN = "Join",
-  LINK = "Link"
+  JOIN = "Join"
 }
 
 g.MOVETYPES = {

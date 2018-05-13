@@ -137,32 +137,8 @@ function u.UnitMap:displayRanges(selunit)
   
 end
 
-function u.UnitMap:evaluateActions(actionmenu, selunit)
-  -- Show available actions after a move, based on evaluation of the current state.
-  
-  -- Board:
-  -- If on boardable unit, show Board. Otherwise, evaluate the other actions - which includes the mutually exclusive Wait.
-  if g.hasVector2key(rangetables.mboardablecells, selunit.pos) then
-    actionmenu:showaction(g.ACTS.BOARD)
-  else
-    -- Capture:
-    local prop = terrainmap:getTerrain(selunit.pos)
-    if prop.IS_PROPERTY and prop.team ~= selunit.team then
-      actionmenu:showaction(g.ACTS.CAPTURE)
-    end
-    -- Attack:
-    local targets = grid[selunit.pos.x][selunit.pos.y].targets
-    if targets and (#targets > 0) then
-      actionmenu:showaction(g.ACTS.ATTACK)
-    end
-    -- Unload:
-    --(may want to check terrain - be a bit silly if tanks try to unload in the sea and just have to cancel.)
-    if selunit.BOARDABLE and (#selunit.boardedunits > 0) then
-      actionmenu:showaction(g.ACTS.UNLOAD)
-    end
-    
-    actionmenu:showaction(g.ACTS.WAIT)
-  end
+function u.UnitMap:isBoardable(vector)
+  return g.hasVector2key(rangetables.mboardablecells, vector)
 end
 
 function u.UnitMap:getDefence(vector)
@@ -297,6 +273,10 @@ function u.UnitMap:manrange(start, minrange, maxrange)
   return cellvectors
 end
 
+function u.UnitMap:neighbourCells(vector)
+  return self:manrange(vector, 1, 1)
+end
+
 function u.UnitMap:getCost(selunit, vec)
   -- Evaluates the cost of selunit moving into vector.
   local occupier = self:getUnit(vec)
@@ -349,7 +329,7 @@ function u.UnitMap:astar(selunit, dest)
     end
     
     -- For each neighbour to this cell,
-    for _,neighbour in pairs(self:manrange(current, 1, 1)) do  -- Using manrange is a bit unoptimised, but it's right there.
+    for _,neighbour in pairs(self:neighbourCells(current)) do
       -- Proceed if traversable...
       local neighbour_cost = self:getCost(selunit, neighbour)
       if neighbour_cost then
