@@ -176,6 +176,11 @@ function u.World:RangeAllOn()
   end
 end
 
+function u.World:PrintCoord()
+  local curpos = Vector2(unitmap:short(cursor.actor:getX()), unitmap:short(cursor.actor:getY()))
+  print(curpos)
+end
+
 function u.World:NextTurn()
   -- Restore the units of the current player.
   for i,unit in ipairs(teamunits[player]) do

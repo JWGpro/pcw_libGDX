@@ -246,27 +246,27 @@ function u.UnitMap:short(x)
 end
 
 function u.UnitMap:manrange(start, minrange, maxrange)
-  --Returns the Manhattan or Taxicab "circle" range from a starting x/y, clamping within a map w/h, taking into account minimum range.
-  --Used to get ranges, e.g. for movement and attack.
-  --The x and y coordinates of the map may be different, but this function assumes the origin is always 0,0.
+  -- Returns the Manhattan or Taxicab "circle" range from a starting x/y, clamping within a map w/h, taking into account minimum range.
+  -- Used to get ranges, e.g. for movement and attack.
+  -- The x and y coordinates of the map may be different, but this function assumes the origin is always 0,0.
   local cellvectors = {}
   
-  --Sets the initial x bounds to between +/- maxrange (clamped within the map).
+  -- Sets the initial x bounds to between +/- maxrange (clamped within the map).
   local minX = g.clampMin(start.x - maxrange, 0)
   local maxX = g.clampMax(start.x + maxrange, MAP_W - 1)
 
   for x=minX,maxX do
     local xr = math.abs(start.x - x)
     local yrange = maxrange - xr
-    --Sets the y bounds to whatever is left of the range after traversing x (again clamped within the map).
+    -- Sets the y bounds to whatever is left of the range after traversing x (again clamped within the map).
     local minY = g.clampMin(start.y - yrange, 0)
     local maxY = g.clampMax(start.y + yrange, MAP_H - 1)
     for y=minY,maxY do
       local yr = math.abs(start.y - y)
-      --Proceed if Manhattan distance >= minrange.
+      -- Proceed if Manhattan distance >= minrange.
       if (xr + yr) >= minrange then
-        --Store the coordinates of the valid cell.
-        table.insert(cellvectors, Vector2(x, y))
+        -- Store the coordinates of the valid cell.
+        table.insert(cellvectors, terrainmap:getVector(x, y))
       end
     end
   end
@@ -347,7 +347,7 @@ function u.UnitMap:astar(selunit, dest)
       end
     end
   end
-  -- No path.
+  -- No path. (Do we ever even get here?)
   return nil
 end
 

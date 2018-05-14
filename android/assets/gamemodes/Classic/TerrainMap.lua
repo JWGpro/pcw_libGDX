@@ -30,22 +30,29 @@ function u.TerrainMap:init(w, h, gameScreen)
   for x=0, w-1 do
     grid[x] = {}
     for y=0, h-1 do
+      grid[x][y] = {vector = Vector2(x, y)}
       self:setTerrain(x, y, terrains.SEA, nil)
     end
   end
   
 end
 
+function u.TerrainMap:getVector(x, y)
+  -- Important when checking vectors by reference, like the A* implementation in UnitMap does.
+  -- In such a case, vec1.equals(vec2) will not suffice.
+  return grid[x][y].vector
+end
+
 function u.TerrainMap:getTerrain(vector)
-  return grid[vector.x][vector.y]
+  return grid[vector.x][vector.y].terrain
 end
 
 function u.TerrainMap:setTerrain(x, y, terrain, team)
   
   if terrain.IS_PROPERTY then
-    grid[x][y] = terrain(x, y, team)
+    grid[x][y].terrain = terrain(x, y, team)
   else
-    grid[x][y] = terrain
+    grid[x][y].terrain = terrain
   end
   
   --temporary - tile placement based on neighbours is gonna be more complex than this.
