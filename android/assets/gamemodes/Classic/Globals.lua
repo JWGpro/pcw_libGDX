@@ -100,18 +100,39 @@ function g.hasVector2key(table, vec)
   end
 end
 
-function g.cycle(table, check)
-  -- Takes an array-like table and returns the value after the "check" value passed.
-  -- It's not really trivial because [i+1] would be nil for the last value.
+function g.cycle(table, check, direction)
+  -- Takes an array-like table and returns a value relative to the position of the check.
+  -- When direction == 1, cycles forwards (returning the next value). When direction == -1, cycles backwards.
+  -- But values other than 1 and -1 should work too.
   for i,v in ipairs(table) do
     if v == check then
-      if i < #table then
-        return table[i + 1]
-      else
-        return table[1]
-      end
+      -- (i + direction) gives the sought index. Modulo forces it to cycle inside the table.
+      -- +1 gives Lua-valid indexes (e.g. 1-3 instead of 0-2).
+      -- -1 fixes offset for Lua indexing (e.g. 0 >> #table, 1 >> 1 instead of -1 >> #table, 0 >> 1).
+      local index = ((i + direction - 1) % #table) + 1
+      return table[index]
     end
   end
+end
+
+function g.damageCalc(Aclass, Ahp, Awep, Dclass, Dhp, Ddef)
+  -- HP is expected to be passed raw (1-100). It's converted to a float with step 0.1 (0.1, 0.2...1.0).
+  local attackerstrength = math.ceil((Ahp / Aclass.MAXHP) * 10) / 10
+  local defenderstrength = math.ceil((Dhp / Dclass.MAXHP) * 10) / 10
+  local weapon = Aclass.WEPS[Awep]
+  -- Look up the modifier for the ammo type on the defender's armour.
+  local armourpenalty = g.AMMOMOD[weapon.AMMOTYPE][Dclass.ARMOUR]
+  -- Terrain defences subtract 10% of damage for each star, but the effect is proportional to the defender's strength.
+  local defstars
+  -- And defences do not apply to air units.
+  if Dclass.MOVETYPE == g.MOVETYPES.AIR then
+    defstars = 0
+  else
+    defstars = Ddef
+  end
+  local terrainpenalty = (1 - (0.1 * defstars * defenderstrength))
+  
+  return attackerstrength * weapon.DAMAGE * armourpenalty * terrainpenalty
 end
 
 ---------------
@@ -177,6 +198,9 @@ g.AMMOMOD = {
     [A.H_VEH] = 0.1,
     [A.ERA] = 0.05,
     [A.COPTER] = 0.25
+  },
+  [AMMO.SABOT] = {
+    [A.COPTER] = 1
   }
 }
 

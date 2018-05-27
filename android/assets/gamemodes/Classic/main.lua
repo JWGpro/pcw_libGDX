@@ -70,7 +70,7 @@ function touchDragged(screenX, screenY, pointer)
   --It appears that you need to set a boolean to pan with MMB, because there is no parameter for the button used to drag.
   --That param is in touchUp and touchDown, so they can set that boolean.
   --but eventually u probably control this with world or sth...
-  world:updateCamera(deltaX, deltaY)
+  world:translateCamera(deltaX, deltaY)
   world:updateCursor(screenX, screenY)
   
 end

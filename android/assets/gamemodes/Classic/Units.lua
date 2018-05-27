@@ -50,8 +50,8 @@ end
 function Unit:updateActor(vector)
   self.actor:setPosition(map:long(vector.x), map:long(vector.y))
 end
-function Unit:getHp()
-  -- Round up HP to ints from 1-10.
+function Unit:displayHp()
+  -- Round up HP to ints from 1-10 for display.
   return math.ceil((self.hp / self.MAXHP) * 10)
 end
 function Unit:takeDamage(x)
@@ -174,32 +174,50 @@ function Unit:snapback(dest)
   map:storeUnitRef(self)
   self:updateActor(dest)
 end
-function Unit:battle(target, wepindex)
-  -- Converts effective HP to a percentage strength for battle calculation.
-  local atkstrength = self:getHp() / 10
-  local defstrength = target:getHp() / 10
+function Unit:simulateAttack(target, wepindex)
+  return g.damageCalc(self.CLASS, self.hp, wepindex, target.CLASS, target.hp, map:getDefence(target.pos))
+end
+function Unit:attack(target, wepindex)
+  local damage = self:simulateAttack(target, wepindex)
+  
   local weapon = self.weps[wepindex]
-  -- Look up the modifier for the ammo type on the defender's armour.
-  local armourpenalty = g.AMMOMOD[weapon.AMMOTYPE][target.ARMOUR]
-  -- Terrain defences subtract 10% of damage for each star, but the effect is proportional to the defender's strength.
-  local defstars
-  -- And defences do not apply to air units.
-  if g.set(u.AIR_UNITS)[target.CLASS] then
-    defstars = 0
-  else
-    defstars = map:getDefence(target.pos)
-  end
-  local terrainpenalty = (1 - (0.1 * defstars * defstrength))
-  
-  local damage = atkstrength * weapon.DAMAGE * armourpenalty * terrainpenalty
-  
   weapon:fire()
+  
+  local targetIsAlive = target.hp > damage
   target:takeDamage(damage)
   print(target.team, target.NAME, target.hp)
+  return targetIsAlive
 end
-function Unit:validweps(target, indirectallowed)
+function Unit:simulateBattle(target, wepindex)
+  local attackerDamage = self:simulateAttack(target, wepindex)
+  local targethp = target.hp - attackerDamage
+  local defenderDamage = 0
+  -- Check if the target would be alive. They can counterattack with the first available weapon.
+  if targethp > 0 then
+    local counterweps = target:validweps(target.pos, self, false)
+    if #counterweps > 0 then
+      defenderDamage = g.damageCalc(target.CLASS, targethp, 1, self.CLASS, self.hp, map:getDefence(self.pos))
+    end
+  end
+  
+  return {attackerHP = self.hp - defenderDamage, defenderHP = targethp}
+end
+function Unit:battle(target, wepindex)
+  local targetIsAlive = self:attack(target, wepindex)
+  
+  -- Check if the target is alive. They will counterattack with the first available weapon.
+  --feels really bad and ***REMOVED*** that i check for the target being alive in two different ways. this whole thing is just a fucking mess.
+  if targetIsAlive then
+    local counterweps = target:validweps(target.pos, self, false)
+    if #counterweps > 0 then
+      target:attack(self, 1)
+    end
+  end
+  
+end
+function Unit:validweps(position, target, indirectallowed)
   local weplist = {}
-  local dist = self.pos:mandist(target.pos)
+  local dist = position:mandist(target.pos)
   
   for i,wep in ipairs(self.weps) do
     -- Conditions:
@@ -259,11 +277,11 @@ wep.Missile = class(Weapon)
 statics = {
   NAME = "Missile",
   DAMAGE = 100,
-  AMMOTYPE = "missile",
+  AMMOTYPE = g.AMMOTYPES.RIFLE,
   MAXAMMO = 9,
   DIRECT = false,
-  MINRANGE = 3,
-  MAXRANGE = 5
+  MINRANGE = 1,
+  MAXRANGE = 3
 }
 g.addPairs(wep.Missile, statics)
 function wep.Missile:init()
@@ -280,7 +298,7 @@ statics = {
   MAXHP = 100,
   MAXFUEL = 99,
   ARMOUR = g.ARMOURS.VEST,
-  WEPS = {[1] = wep.Rifle}
+  WEPS = {[1] = wep.Rifle, [2] = wep.Missile}
   --CAPTURESTRENGTH = 1.0
 }
 g.addPairs(u.Infantry, statics)

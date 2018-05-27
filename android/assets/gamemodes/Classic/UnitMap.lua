@@ -64,8 +64,9 @@ function u.UnitMap:init(gameScreen, terrainMap, teamUnits)
   end
   
   units.init(gameScreen, self, teamUnits)
-  local inf1 = units.Infantry(9, 9, g.TEAMS.BLUE)
-  local inf2 = units.Infantry(12, 12, g.TEAMS.BLUE)
+  local inf1 = units.Infantry(13, 12, g.TEAMS.BLUE)
+  local inf2 = units.Infantry(12, 11, g.TEAMS.BLUE)
+  local inf5 = units.Infantry(13, 10, g.TEAMS.BLUE)
   local inf3 = units.Infantry(14, 11, g.TEAMS.RED)
   local apc1 = units.APC(16, 11, g.TEAMS.RED)
   local inf4 = units.Infantry(18, 9, g.TEAMS.RED)
@@ -114,7 +115,8 @@ function u.UnitMap:displayRanges(selunit)
     -- Iterate over the movement range cells.
     for vec,_ in pairs(rangetables.mdestinationcells) do
       -- Proceed if weapon is direct, or cell is the starting location (for indirect weapons).
-      if wep.DIRECT or vec:equals(selunit.pos) then
+      local indirectallowed = selunit.pos:equals(vec)
+      if wep.DIRECT or indirectallowed then
         -- New table for targets from this cell. One for each valid movement cell.
         grid[vec.x][vec.y].targets = {}
         -- Get the attack range from the movement cell.
@@ -127,7 +129,7 @@ function u.UnitMap:displayRanges(selunit)
           rangetables.attackrangecells[tgt] = cell
           -- Get target and add it to the table.
           local target = grid[tgt.x][tgt.y].unit
-          if target and (target.team ~= selunit.team) then --or ally. and armour is hittable.
+          if target and (target.team ~= selunit.team) and (#selunit:validweps(vec, target, indirectallowed) > 0) then --or ally.
             table.insert(grid[vec.x][vec.y].targets, target)
           end
         end
@@ -149,7 +151,7 @@ end
 function u.UnitMap:hideRanges()
   -- Clearing tiles from cells.
   for k,rangetable in pairs(rangetables) do
-    for xy,cell in pairs(rangetable) do
+    for _,cell in pairs(rangetable) do
       cell:setTile(nil)
     end
   end
@@ -158,7 +160,7 @@ end
 function u.UnitMap:showRanges()
   -- Reassigning tiles to cells.
   for k,rangetable in pairs(rangetables) do
-    for xy,cell in pairs(rangetable) do
+    for _,cell in pairs(rangetable) do
       cell:setTile(TILES[k])
     end
   end
@@ -169,19 +171,23 @@ function u.UnitMap:displayAttackRange(wep, vector)
   for i,vec in pairs(self:manrange(vector, wep.MINRANGE, wep.MAXRANGE)) do
     local cell = ATTACKRANGE_LAYER:getCell(vec.x, vec.y)
     cell:setTile(TILES.attackrangecells)
+    rangetables.attackrangecells[vec] = cell
   end
 end
 
 function u.UnitMap:clearRanges()
-  -- Clearing range tiles (and table) permanently, along with targets.
+  -- Clearing range tiles (and table) permanently.
   for k,rangetable in pairs(rangetables) do
-    for vec,cell in pairs(rangetable) do
+    for _,cell in pairs(rangetable) do
       cell:setTile(nil)
-      if rangetable == rangetables.mdestinationcells then  -- The movement destination cells may refer to target tables, so nil them.
-        grid[vec.x][vec.y].targets = nil
-      end
     end
     rangetables[k] = {}
+  end
+end
+
+function u.UnitMap:clearTargets()
+  for vec,_ in pairs(rangetables.mdestinationcells) do
+    grid[vec.x][vec.y].targets = nil
   end
 end
 

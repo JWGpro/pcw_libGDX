@@ -54,15 +54,13 @@ function u.AttackCommand:init(unit, wepindex, target)
   self.unit = unit
   self.unitHp = unit.hp
   self.wepindex = wepindex
-  --weapon
-  --target weapon! (firstwep)
   self.target = target
   self.targetHp = target.hp
   self:execute()
 end
 function u.AttackCommand:execute()
   self.unit:battle(self.target, self.wepindex)
-  self.unit:wait()
+  self.unit:wait()  --u can only do this if selunit is still alive!!...i think?? oh...no. the unit still has a reference.
 end
 function u.AttackCommand:undo()
   --restore lost ammo (for both)

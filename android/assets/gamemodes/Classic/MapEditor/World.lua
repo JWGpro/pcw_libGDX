@@ -75,8 +75,7 @@ function u.World:updateCursor(x, y)
   cursor.actor:setPosition(newX, newY)
 end
 
-function u.World:updateCamera(x, y)
-  -- Updates the camera position.
+function u.World:translateCamera(x, y)
   cam:translate(x, y)
 end
 

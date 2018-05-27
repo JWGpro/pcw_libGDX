@@ -4,8 +4,9 @@ local cur = require "Cursor"
 local com = require "Commands"
 local tm = require "TerrainMap"
 local um = require "UnitMap"
-local am = require "Play/ActionMenu"
-local dm = require "Play/DeployMenu"
+local amenu = require "Play/ActionMenu"
+local dmenu = require "Play/DeployMenu"
+local tmenu = require "Play/TargetMenu"
 
 local u = {}  -- Public. World is held here, so all its instance vars and methods are public.
 local pri = {}  -- Selection functions.
@@ -17,6 +18,7 @@ local terrainmap -- Contains the terrain grid.
 local unitmap  -- Contains the unit grid, handles Units, talks to the ActionMenu...several purposes. Layered on top of TerrainMap.
 local actionmenu
 local deploymenu
+local targetmenu
 local cursor
 local cam local offX local offY
 local panning = false
@@ -28,6 +30,7 @@ local historyposition = 0
 -- Selection state
 local state = STATES.DEFAULT
 local selunit
+local indirectallowed
 local moveCommand
 -- Players
 local players = {g.TEAMS.RED, g.TEAMS.BLUE}  --this is gonna come from java with init ofc. along with map and such. but 1v1 is always RvB.
@@ -51,8 +54,9 @@ function u.World:init(gameScreen, gameCamera, tiledMap, externalDir, uiStage)
   terrainmap:loadMap(externalDir .. "PCW/maps/test_tbl.map")
   unitmap = um.UnitMap(gameScreen, terrainmap, teamunits)
   
-  actionmenu = am.ActionMenu(gameScreen, skin, uiStage, actionfuncs)
-  deploymenu = dm.DeployMenu(self, gameScreen, skin, uiStage)
+  actionmenu = amenu.ActionMenu(gameScreen, skin, uiStage, actionfuncs)
+  deploymenu = dmenu.DeployMenu(self, gameScreen, skin, uiStage)
+  targetmenu = tmenu.TargetMenu(self, gameScreen, skin, uiStage, unitmap)
   
   cursor = cur.Cursor(gameScreen)
   -- Camera init.
@@ -77,9 +81,13 @@ function u.World:updateCursor(x, y)
   cursor.actor:setPosition(newX, newY)
 end
 
-function u.World:updateCamera(x, y)
-  -- Updates the camera position.
+function u.World:translateCamera(x, y)
   cam:translate(x, y)
+end
+
+function u.World:setCamera(x, y)
+  cam.position.x = x
+  cam.position.y = y
 end
 
 --------------
@@ -123,6 +131,7 @@ function u.World:cancelLast()
   elseif state == STATES.MOVED then
     pri.demove()
   elseif state == STATES.ACTING then
+    -- For Attack/Unload.
     pri.deaction()
   -- Or just closes any menus.
   elseif state == STATES.MENU then
@@ -187,7 +196,7 @@ function u.World:NextTurn()
     unit:restore()
   end
   -- Cycle control.
-  player = g.cycle(players, player)
+  player = g.cycle(players, player, 1)
   print("It's " .. player .. "'s turn!")
 end
 
@@ -202,9 +211,10 @@ function pri.selectunit(unit)
   state = STATES.SELECTED
 end
 
-function pri.moveunit(vector)
+function pri.moveunit(destination)
   unitmap:hideRanges()
-  moveCommand = com.MoveCommand(selunit, vector)
+  indirectallowed = (selunit.pos:equals(destination))
+  moveCommand = com.MoveCommand(selunit, destination)
   pri.evaluateActions()
   state = STATES.MOVED
 end
@@ -225,20 +235,21 @@ function pri.deselect()
   selunit = nil
   moveCommand = nil
   unitmap:clearRanges()
+  unitmap:clearTargets()
   actionmenu:clear()
   state = STATES.DEFAULT
 end
 
 function pri.demove()
   moveCommand:undo()  -- No need to nil this because the reference will be overwritten by the next MoveCommand.
-  unitmap:showRanges()
+  unitmap:displayRanges(selunit)
   actionmenu:clear()
   state = STATES.SELECTED
 end
 
 function pri.deaction()
   pri.evaluateActions()
-  unitmap:hideRanges()
+  targetmenu:clear()
   state = STATES.MOVED
 end
 
@@ -246,6 +257,7 @@ function u.World:closemenus()
   --and any other applicable menu, maybe retreating rather than closing.
   --feels so ***REMOVED*** letting menus call this.
   deploymenu:clear()
+  targetmenu:clear()
   state = STATES.DEFAULT
 end
 
@@ -270,7 +282,7 @@ function pri.evaluateActions()
     end
     -- Attack:
     local targets = unitmap:getTargets(selunit.pos)
-    if targets and (#targets > 0) then  --what?
+    if targets and (#targets > 0) then
       actionmenu:showaction(g.ACTS.ATTACK)
     end
     -- Unload:
@@ -300,20 +312,11 @@ function actionfuncs.Attack()
   state = STATES.ACTING
   actionmenu:clear()  --eventually hide().
   
-  --not here probably, but in the UI described below. depends on valid weapons.
-  unitmap:displayAttackRange(selunit.weps[1], selunit.pos)
-  --target icons for each pairs(map:getTargets(selunit.x, selunit.y))
-  
-  --show new UI screen:
-  -- for current weapon (firstwep), show manrange and highlight first target (in targets table).
-  --change weapon button(s).
-  --change target buttons.
-  --battle outcome label.
-  --fire button.
-  
-  local target = unitmap:getTargets(selunit.pos)[1]
-  
-  local actionCommand = com.AttackCommand(selunit, 1, target)
+  local targets = unitmap:getTargets(selunit.pos)
+  targetmenu:show(selunit, targets, indirectallowed)
+end
+function u.World:dispatchAttack(wepindex, target)
+  local actionCommand = com.AttackCommand(selunit, wepindex, target)
   pri.endMove(actionCommand)
 end
 function actionfuncs.Capture()
