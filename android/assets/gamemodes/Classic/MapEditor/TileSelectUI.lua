@@ -61,7 +61,7 @@ function u.TileSelectUI:init(gameScreen, skin, externalDir, uiStage, terrainSet)
     local button = java:reflect("com.badlogic.gdx.scenes.scene2d.ui.TextButton",
       {"String", "Skin"}, {terrain.NAME, skin})
     tilelist:add(button):width(button:getPrefWidth() * 0.5):height(button:getPrefHeight() * 0.5)
-    java:addChangeListener(button, setActiveTile, terrain)
+    java:addChangeListener(button, setActiveTile, nil, terrain)
     i = i + 1
     if i == 3 then
       tilelist:row()
@@ -80,7 +80,7 @@ function u.TileSelectUI:init(gameScreen, skin, externalDir, uiStage, terrainSet)
   atb:right()
   atb:pad(10)
   
-  java:addChangeListener(atb, openTileList, nil)
+  java:addChangeListener(atb, openTileList, nil, nil)
   uistage:addActor(atb)
 end
 

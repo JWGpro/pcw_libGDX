@@ -10,17 +10,14 @@ local java
 
 local menu
 local unitbuttons = {}
-local deployer
+local deployer  -- Like, the building deploying.
 
-local function spawn(args)
-  --i'm ***REMOVED***?...
-  local deploymenu = args[1]
-  local unit = args[2]
+local function spawn(unit)
   -- Deploys the unit over deployer by calling its constructor.
   --for deployment to carriers, could immediately then load into the carrier...though init might try to set refs...
   local newunit = unit(deployer.x, deployer.y, deployer.team)
   newunit:wait()
-  world:closemenus() --this feels horrible.
+  world:closemenus()  -- World will set the appropriate state, but it needs to know the menu was closed.
 end
 
 u.DeployMenu = class()
@@ -36,10 +33,11 @@ function u.DeployMenu:init(caller, gameScreen, skin, uiStage)
   menu:left()
   menu:pad(10)
   
+  -- Creates buttons for all units. Will decide which ones to actually show later, depending on building.
   for i,unit in pairs(units.UNITS) do
     local button = java:reflect("com.badlogic.gdx.scenes.scene2d.ui.TextButton", {"String", "Skin"}, {unit.NAME, skin})
     unitbuttons[unit.NAME] = button
-    java:addChangeListener(button, spawn, {self, unit})
+    java:addChangeListener(button, spawn, nil, unit)
   end
   
 end

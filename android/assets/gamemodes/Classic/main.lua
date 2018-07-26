@@ -20,10 +20,14 @@ function init(childmode, gameScreen, gameCamera, gameStage, uiCamera, uiStage, t
   inputmap = im.InputMap(world, inputKeys, inputButtons)
 end
 
-function runlistener(func, args, event, actor)
-  --Runs a listener function (usually from a button) and passes in an object in case it's an instance method.
-  --That's the same as object:func() in that case, but for some reason that doesn't work. Maybe due to how the function is passed?
-  func(args)
+function runlistener(func, obj, args, event, actor)
+  -- Runs a listener function (usually from a button) and passes in an object (which may be nil) in case it's an instance method.
+  -- Not doing anything with event or actor right now.
+  if obj then
+    func(obj, args)
+  else
+    func(args)
+  end
 end
 
 function loop(delta)

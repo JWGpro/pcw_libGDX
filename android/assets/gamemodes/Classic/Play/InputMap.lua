@@ -22,7 +22,7 @@ function u.InputMap:init(World, inputKeys, inputButtons)
   inp.keyDown[KEYS.RIGHT] = world.cursorRight --hold...
   inp.keyDown[KEYS.BACK] = world.cancelLast
 --  i.keyDown[KEYS.M] = c.Menu
-  inp.keyDown[KEYS.P] = world.PrintCoord
+  inp.keyDown[KEYS.D] = world.PrintDebugInfo
   inp.keyDown[KEYS.R] = world.RangeAllOn
   inp.keyDown[KEYS.E] = world.NextTurn
   inp.keyDown[KEYS.MINUS] = world.ReplayUndo

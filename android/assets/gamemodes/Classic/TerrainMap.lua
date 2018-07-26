@@ -7,7 +7,7 @@ local terrains = ter.terrains
 
 local u = {}  -- Public.
 
-local grid = {}  -- For each grid[x][y] position, there is a terrain reference.
+local grid = {}
 local terrainLayer
 local terrainSet
 

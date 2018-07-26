@@ -7,18 +7,20 @@ local um = require "UnitMap"
 local amenu = require "Play/ActionMenu"
 local dmenu = require "Play/DeployMenu"
 local tmenu = require "Play/TargetMenu"
+local umenu = require "Play/UnloadMenu"
 
 local u = {}  -- Public. World is held here, so all its instance vars and methods are public.
 local pri = {}  -- Selection functions.
 
 -- Constants
-local STATES = {DEFAULT = 1, SELECTED = 2, MOVED = 3, ACTING = 4, MENU = 5}
+local STATES = {DEFAULT = "Default", SELECTED = "Selected", MOVED = "Moved", ACTING = "Acting", MENU = "Menu"}
 
 local terrainmap -- Contains the terrain grid.
 local unitmap  -- Contains the unit grid, handles Units, talks to the ActionMenu...several purposes. Layered on top of TerrainMap.
 local actionmenu
 local deploymenu
 local targetmenu
+local unloadmenu
 local cursor
 local cam local offX local offY
 local panning = false
@@ -57,6 +59,7 @@ function u.World:init(gameScreen, gameCamera, tiledMap, externalDir, uiStage)
   actionmenu = amenu.ActionMenu(gameScreen, skin, uiStage, actionfuncs)
   deploymenu = dmenu.DeployMenu(self, gameScreen, skin, uiStage)
   targetmenu = tmenu.TargetMenu(self, gameScreen, skin, uiStage, unitmap)
+  unloadmenu = umenu.UnloadMenu(self, gameScreen, skin, uiStage, unitmap)
   
   cursor = cur.Cursor(gameScreen)
   -- Camera init.
@@ -67,9 +70,6 @@ function u.World:init(gameScreen, gameCamera, tiledMap, externalDir, uiStage)
   
   --init/set other UI:
   -- menu
-  -- target
-  -- unload
-  -- link
   -- build/deploy
 end
 
@@ -185,9 +185,11 @@ function u.World:RangeAllOn()
   end
 end
 
-function u.World:PrintCoord()
+function u.World:PrintDebugInfo()
   local curpos = Vector2(unitmap:short(cursor.actor:getX()), unitmap:short(cursor.actor:getY()))
-  print(curpos)
+  local selunitName = "none"
+  if selunit then selunitName = selunit.NAME end
+  print("Debug info @ time " .. os.clock() .. ":\n Cursor position: " .. tostring(curpos) .. "\n State: " .. state .. "\n selunit: " .. selunitName)
 end
 
 function u.World:NextTurn()
@@ -249,15 +251,16 @@ end
 
 function pri.deaction()
   pri.evaluateActions()
-  targetmenu:clear()
+  targetmenu:clear()  --DUDE JUST CLEAR RANGES LMAO
+  unloadmenu:clear()  --RLY DOE?
   state = STATES.MOVED
 end
 
 function u.World:closemenus()
-  --and any other applicable menu, maybe retreating rather than closing.
-  --feels so ***REMOVED*** letting menus call this.
+  --and any other applicable menu.
+  --called from DeployMenu when spawning a unit.
+  assert(state == STATES.MENU)
   deploymenu:clear()
-  targetmenu:clear()
   state = STATES.DEFAULT
 end
 
@@ -286,7 +289,7 @@ function pri.evaluateActions()
       actionmenu:showaction(g.ACTS.ATTACK)
     end
     -- Unload:
-    --(may want to check terrain - be a bit silly if tanks try to unload in the sea and just have to cancel.)
+    --(check terrain - be a bit silly if tanks try to unload in the sea and just have to cancel.)
     if selunit.BOARDABLE and (#selunit.boardedunits > 0) then
       actionmenu:showaction(g.ACTS.UNLOAD)
     end
@@ -348,19 +351,10 @@ function actionfuncs.Deploy()
   --not sure yet, probably similar to Base deploy code.
 end
 function actionfuncs.Unload()
-  --unit buttons showing some info like moves left and HP, maybe allow bring up unit info menu. try to select one with no moves and it bitches.
+  state = STATES.ACTING
+  actionmenu:clear()  --eventually hide().
   
-  --for now just assume the APC waits and transfers selection immediately to the infantry.
-  --ofc this means if the infantry has no moves then you will select an inf with no moves.
-  local cargo = selunit.boardedunits[1]
-  local actionCommand = com.UnloadCommand(selunit, cargo)
-  pri.endMove(actionCommand)
-  --this counts as a move, but in reality you would want to be able to unload consecutive units...
-  --possibly you could set movesleft to 0 so the APC can't move, and change the selection criteria...
-  --although since it's moved and not waited, it has no ref so you can't select it...
-  
-  pri.selectunit(cargo)
-  
+  unloadmenu:show(selunit)
   ----bugs:
   --wait after unload (wait:undo()) does not remember how many movesleft the infantry had; restores it to max with restore().
   --  that could happen if you demoved after an unload-move (it doesn't tho bc the map remembers the range). restore and snapback set to maxmoves.
@@ -369,6 +363,14 @@ function actionfuncs.Unload()
   --also, if you undo a move after an unload, it'll put the unit on top of the APC, as it's a discrete move to the APC's.
   --  that would obviously mean you could not select that unit because it's off the grid.
   --  except you can, because snapback overrides the APC's ref. this makes it unselectable from that point on. could add a verify in storeUnitRef.
+end
+function u.World:dispatchUnload(cargo)
+  local actionCommand = com.UnloadCommand(selunit, cargo)
+  pri.endMove(actionCommand)
+  --this counts as a move, but in reality you would want to be able to unload consecutive units...
+  --possibly you could set movesleft to 0 so the APC can't move, and change the selection criteria...
+  --although since it's moved and not waited, it has no ref so you can't select it...
+  pri.selectunit(cargo)
 end
 
 return u

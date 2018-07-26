@@ -153,9 +153,9 @@ function u.UnloadCommand:init(transport, cargo)
   self:execute()
 end
 function u.UnloadCommand:execute()
-  -- Unloads the cargo. The caller of this command (e.g. World) will then select the cargo.
+  -- Unloads the cargo. The caller of this command (i.e. World) will then select the cargo.
   self.cargo:disembark(self.transport)
-  self.transport:wait() --this means you can only unload once, so this is wrong, but temporary.
+  -- No wait afterwards; free to move.
 end
 function u.UnloadCommand:undo()
   -- Puts the cargo back in the transport.

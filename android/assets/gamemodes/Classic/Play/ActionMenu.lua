@@ -29,7 +29,7 @@ function u.ActionMenu:init(gameScreen, skin, uiStage, actionfuncs)
     local button = java:reflect("com.badlogic.gdx.scenes.scene2d.ui.TextButton", {"String", "Skin"}, {str, skin})
     -- Store button.
     actionbuttons[str] = button
-    java:addChangeListener(button, actionfuncs[str], nil)  -- actionfuncs reside in World right now, passed by Map.
+    java:addChangeListener(button, actionfuncs[str], nil, nil)  -- actionfuncs reside in World right now, passed by Map.
   end
 end
 

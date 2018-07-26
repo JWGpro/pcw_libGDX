@@ -86,11 +86,6 @@ local function changeWep()
   updateWeapon(g.cycle(validweps, wepindex, 1))
 end
 
-local function confirm()
-  world:dispatchAttack(wepindex, target)
-  world:closemenus()
-end
-
 u.TargetMenu = class()
 function u.TargetMenu:init(caller, gameScreen, skin, uiStage, unitMap)
   world = caller
@@ -125,22 +120,22 @@ function u.TargetMenu:init(caller, gameScreen, skin, uiStage, unitMap)
   outcomeTable:add(weaponStringB)
   
   local button1 = java:reflect("com.badlogic.gdx.scenes.scene2d.ui.TextButton", {"String", "Skin"}, {"Next", skin})
-  java:addChangeListener(button1, nextTarget, nil)
+  java:addChangeListener(button1, nextTarget, nil, nil)
   container:add(button1)
   container:add(outcomeTable)
   container:row()
   
   local button2 = java:reflect("com.badlogic.gdx.scenes.scene2d.ui.TextButton", {"String", "Skin"}, {"Prev", skin})
-  java:addChangeListener(button2, prevTarget, nil)
+  java:addChangeListener(button2, prevTarget, nil, nil)
   container:add(button2)
   container:row()
   
   local button3 = java:reflect("com.badlogic.gdx.scenes.scene2d.ui.TextButton", {"String", "Skin"}, {"Weapon", skin})
-  java:addChangeListener(button3, changeWep, nil)
+  java:addChangeListener(button3, changeWep, nil, nil)
   container:add(button3)
   
   local button4 = java:reflect("com.badlogic.gdx.scenes.scene2d.ui.TextButton", {"String", "Skin"}, {"Confirm", skin})
-  java:addChangeListener(button4, confirm, nil)
+  java:addChangeListener(button4, self.confirm, self, nil)
   container:add(button4)
   
   --targets don't change, but can be hit by one or all weapons as selected. important focus is the target, not the weapon.
@@ -155,6 +150,11 @@ function u.TargetMenu:show(selUnit, targetlist, indirectAllowed)
   updateTarget(targets[1])
   
   uistage:addActor(container)
+end
+
+function u.TargetMenu:confirm()
+  world:dispatchAttack(wepindex, target)  -- World knows what happened, so it can set state.
+  self:clear()
 end
 
 function u.TargetMenu:clear()

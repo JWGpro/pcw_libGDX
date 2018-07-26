@@ -50,8 +50,8 @@ end
 function Unit:updateActor(vector)
   self.actor:setPosition(map:long(vector.x), map:long(vector.y))
 end
-function Unit:displayHp()
-  -- Round up HP to ints from 1-10 for display.
+function Unit:getStrength()
+  -- Round up HP to ints from 1-10 for display or strength calculations (attack/capture...).
   return math.ceil((self.hp / self.MAXHP) * 10)
 end
 function Unit:takeDamage(x)
@@ -157,7 +157,7 @@ function Unit:move(dest)
   -- Deduct spaces moved, and burn fuel.
   self.movesleft = self.movesleft - self.pos:mandist(dest)
   self:burnfuel(self:movesused())
-  -- Update coordinates, but don't store new coordinates yet. You may end up off the grid (boarded).
+  -- Kill old coordinates, but don't store new coordinates yet. You may end up off the grid (boarded).
   map:killUnitRef(self)
   self.pos = dest
   -- Then move the unit with an animation. (At the moment there is no animation.)

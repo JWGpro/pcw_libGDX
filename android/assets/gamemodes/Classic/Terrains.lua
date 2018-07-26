@@ -157,7 +157,7 @@ function Property:init(x, y, teamID)
 end
 
 function Property:partialCapture(unit)
-  self.capStrength = self.capStrength - unit:getHp()
+  self.capStrength = self.capStrength - unit:getStrength()
   if self.capStrength <= 0 then
     self:capture(unit.team)
   end
