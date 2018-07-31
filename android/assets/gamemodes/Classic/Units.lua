@@ -22,7 +22,7 @@ function Unit:init(x, y, teamID)
   -- Store the coordinates. These are grabbed by functions in Map and World.
   self.pos = Vector2(x, y)
   -- Place the unit.
-  self:updateActor(self.pos)
+  self:placeActor(self.pos)
   
   -- Store the unit reference for direct lookup in a 2D array of the grid.
   map:storeUnitRef(self)
@@ -47,7 +47,7 @@ function Unit:init(x, y, teamID)
   self.movesleft = self.maxmoves  -- This is set a lot, but only checked at selection to make sure you can still move. So, 0 = "ordered".
   self.isBoarded = false
 end
-function Unit:updateActor(vector)
+function Unit:placeActor(vector)
   self.actor:setPosition(map:long(vector.x), map:long(vector.y))
 end
 function Unit:getStrength()
@@ -77,7 +77,7 @@ function Unit:die()
   --can't ever GC units because they are stored in the replay.
 end
 function Unit:heal(x)
-  --if you're dead, then live again!
+  --if you're dead, then live again! (due to a replay rewind)
   local newhp = self.hp + x
   if newhp > self.MAXHP then
     self.hp = self.MAXHP
@@ -102,7 +102,7 @@ function Unit:burnfuel(x)
 end
 function Unit:addfuel(x)
   local newfuel = self.fuel + x
-  if newfuel > self.MAXHP then
+  if newfuel > self.MAXFUEL then
     self.fuel = self.MAXFUEL
   else
     self.fuel = newfuel
@@ -114,8 +114,6 @@ end
 function Unit:wait()
   self.movesleft = 0
   self.actor:tint(0x7f7f7fff)  -- Grey
-  -- Update grid reference on this valid position.
-  map:storeUnitRef(self)
 end
 function Unit:restore()
   -- Restore moves and reset tint.
@@ -138,7 +136,7 @@ end
 function Unit:disembark(transport)
   self.pos = transport.pos
   self.isBoarded = false
-  self:updateActor(self.pos)
+  self:placeActor(self.pos)
   
   self.actor:show()
   table.remove(transport.boardedunits, self.boardnumber)  --here's a bug for u. inf1 boards and inf2 boards. inf1 leaves. inf2 is now in 1.
@@ -153,26 +151,24 @@ function Unit:getmoves()
     return self.fuel
   end
 end
-function Unit:move(dest)
-  -- Deduct spaces moved, and burn fuel.
-  self.movesleft = self.movesleft - self.pos:mandist(dest)
-  self:burnfuel(self:movesused())
-  -- Kill old coordinates, but don't store new coordinates yet. You may end up off the grid (boarded).
+function Unit:move(dest, direction)
+  -- Direction should be +1 (forwards) or -1 (backwards). But I guess it could be used as a general cost modifier (e.g. for snow).
+  local fuelcost = direction * self.pos:mandist(dest)
+  -- Deduct spaces moved, and burn (or add) fuel.
+  self.movesleft = self.movesleft - fuelcost
+  self:burnfuel(fuelcost)
+  -- Update coordinates.
   map:killUnitRef(self)
-  self.pos = dest
-  -- Then move the unit with an animation. (At the moment there is no animation.)
-  --animatemove
-  self:updateActor(dest)
-end
-function Unit:snapback(dest)
-  -- Kill ref in case it was set by a wait(); i.e. when rewinding the replay. Not necessary when simply demoving, as the ref was killed.
-  -- The method itself will ensure that you don't kick a boarded transport off the grid by accident.
-  map:killUnitRef(self)
-  -- Restore moves, update the grid reference, and move back.
-  self.movesleft = self.maxmoves
   self.pos = dest
   map:storeUnitRef(self)
-  self:updateActor(dest)
+  
+  if direction > 0 then
+    --move the unit with an animation if forwards. (At the moment there is no animation.)
+    self:placeActor(dest)
+  else
+    -- Snap back.
+    self:placeActor(dest)
+  end
 end
 function Unit:simulateAttack(target, wepindex)
   return g.damageCalc(self.CLASS, self.hp, wepindex, target.CLASS, target.hp, map:getDefence(target.pos))

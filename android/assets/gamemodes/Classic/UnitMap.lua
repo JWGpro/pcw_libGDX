@@ -205,9 +205,14 @@ function u.UnitMap:getUnit(vector)
 end
 
 function u.UnitMap:storeUnitRef(unit)
-  -- Should be used whenever a unit newly occupies a unique position.
-  -- For example: spawn, wait (but not board).
-  grid[unit.pos.x][unit.pos.y].unit = unit
+  -- Should be used whenever a unit newly occupies a position.
+  -- For example: spawn, move.
+  
+  -- But we make sure there's not already a unit in that position.
+  -- Otherwise, we could overwrite an APC or something.
+  if not self:getUnit(unit.pos) then
+    grid[unit.pos.x][unit.pos.y].unit = unit
+  end
 end
 
 function u.UnitMap:killUnitRef(unit)

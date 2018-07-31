@@ -14,20 +14,17 @@ local u = {}
 u.MoveCommand = class(Command)
 function u.MoveCommand:init(unit, dest)
   self.unit = unit
-  -- Stores starting location.
   self.startpos = unit.pos
   self.dest = dest
-  self.startfuel = unit.fuel
   self:execute()
 end
 function u.MoveCommand:execute()
   -- Moves unit to destination.
-  self.unit:move(self.dest)
+  self.unit:move(self.dest, 1)
 end
 function u.MoveCommand:undo()
-  -- Snaps the unit back to its starting location, and restores the fuel. Can't do that in snapback.
-  self.unit:snapback(self.startpos)
-  self.unit:setFuel(self.startfuel)
+  -- Moves unit back to the start.
+  self.unit:move(self.startpos, -1)
 end
 
 -- Everything below is action commands.
