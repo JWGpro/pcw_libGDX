@@ -204,12 +204,17 @@ function u.UnitMap:getUnit(vector)
   return grid[vector.x][vector.y].unit
 end
 
+function u.UnitMap:isOnGrid(unit)
+  -- Returns true if grid reference points to unit, false if not (vector resolves to a different unit or no unit).
+  return self:getUnit(unit.pos) == unit
+end
+
 function u.UnitMap:storeUnitRef(unit)
   -- Should be used whenever a unit newly occupies a position.
   -- For example: spawn, move.
   
   -- But we make sure there's not already a unit in that position.
-  -- Otherwise, we could overwrite an APC or something.
+  -- Otherwise, we could overwrite an APC when boarding it.
   if not self:getUnit(unit.pos) then
     grid[unit.pos.x][unit.pos.y].unit = unit
   end
@@ -221,7 +226,7 @@ function u.UnitMap:killUnitRef(unit)
   
   -- But we only kill the ref if the coordinates the unit holds, do in fact refer to itself on the grid.
   -- Otherwise, we might kill the ref of its transport.
-  if self:getUnit(unit.pos) == unit then
+  if self:isOnGrid(unit) then
     grid[unit.pos.x][unit.pos.y].unit = nil
   end
 end

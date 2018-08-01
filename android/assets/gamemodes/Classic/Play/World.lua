@@ -126,15 +126,18 @@ end
 
 function u.World:cancelLast()
   -- Rolls back the selection state.
-  if state == STATES.SELECTED then
+  if state == STATES.SELECTED and not unitmap:isOnGrid(selunit) then
+    -- Considered to be unloading if selunit isn't on the grid.
+    pri.cancelunload()
+  elseif state == STATES.SELECTED then
     pri.deselect()
   elseif state == STATES.MOVED then
     pri.demove()
   elseif state == STATES.ACTING then
     -- For Attack/Unload.
     pri.deaction()
-  -- Or just closes any menus.
   elseif state == STATES.MENU then
+    -- Or just closes any menus.
     self:closemenus()
   end
   
@@ -251,9 +254,23 @@ end
 
 function pri.deaction()
   pri.evaluateActions()
-  targetmenu:clear()  --DUDE JUST CLEAR RANGES LMAO
-  unloadmenu:clear()  --RLY DOE?
+  targetmenu:clear()
+  unloadmenu:clear()
   state = STATES.MOVED
+end
+
+function pri.cancelunload()
+  -- This rolls back one step as you'd expect. Doesn't look very elegant though.
+  local transport = unitmap:getUnit(selunit.pos)
+  
+  local unload = history[historyposition]
+  unload:undo()
+  historyposition = historyposition - 1
+  
+  pri.deselect()
+  pri.selectunit(transport)  -- Select
+  pri.moveunit(unload.moveCommand.dest)  -- Move
+  actionfuncs.Unload()  -- Unload menu
 end
 
 function u.World:closemenus()
@@ -359,17 +376,11 @@ function actionfuncs.Unload()
   --wait after unload (wait:undo()) does not remember how many movesleft the infantry had; restores it to max with restore().
   --  that could happen if you demoved after an unload-move (it doesn't tho bc the map remembers the range). restore and snapback set to maxmoves.
   --  well the MoveCommand can store that, so just feed it back in...
-  --shouldn't be able to deselect an unloaded unit, or use an UNLOADING state so you can undo+pop last move...
-  --also, if you undo a move after an unload, it'll put the unit on top of the APC, as it's a discrete move to the APC's.
-  --  that would obviously mean you could not select that unit because it's off the grid.
-  --  except you can, because snapback overrides the APC's ref. this makes it unselectable from that point on. could add a verify in storeUnitRef.
 end
 function u.World:dispatchUnload(cargo)
   local actionCommand = com.UnloadCommand(selunit, cargo)
   pri.endMove(actionCommand)
-  --this counts as a move, but in reality you would want to be able to unload consecutive units...
-  --possibly you could set movesleft to 0 so the APC can't move, and change the selection criteria...
-  --although since it's moved and not waited, it has no ref so you can't select it...
+  
   pri.selectunit(cargo)
 end
 

@@ -59,7 +59,6 @@ end
 function u.UnloadMenu:show(selUnit)
   selunit = selUnit
   outunit = selunit.boardedunits[1]
-  world:setCamera(unitmap:long(selunit.pos.x), unitmap:long(selunit.pos.y))
   update()
   
   uistage:addActor(container)
