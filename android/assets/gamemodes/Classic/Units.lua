@@ -54,6 +54,9 @@ function Unit:getStrength()
   -- Round up HP to ints from 1-10 for display or strength calculations (attack/capture...).
   return math.ceil((self.hp / self.MAXHP) * 10)
 end
+function Unit:isWounded()
+  return self.hp ~= self.MAXHP
+end
 function Unit:takeDamage(x)
   self.hp = self.hp - x
   if self.hp <= 0 then
@@ -231,6 +234,17 @@ function Unit:validweps(position, target, indirectallowed)
   
   return weplist
 end
+function Unit:join()
+  -- Gives HP and supplies to the target, then dies.
+  local target = map:getUnit(self.pos)
+  target:heal(self.hp)
+  target:addfuel(self.fuel)
+  for i,wep in ipairs(target.weps) do
+    local selfwep = self.weps[i]
+    wep:addammo(selfwep.ammo)
+  end
+  self:die()
+end
 
 local wep = {}
 
@@ -254,6 +268,16 @@ end
 function Weapon:fire()
   if self.MAXAMMO then
     self.ammo = self.ammo - 1
+  end
+end
+
+function Weapon:addammo(x)
+  if self.MAXAMMO == nil then return end
+  local newammo = self.ammo + x
+  if newammo > self.MAXAMMO then
+    self.ammo = self.MAXAMMO
+  else
+    self.ammo = newammo
   end
 end
 

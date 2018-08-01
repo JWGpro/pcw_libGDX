@@ -127,7 +127,7 @@ end
 function u.World:cancelLast()
   -- Rolls back the selection state.
   if state == STATES.SELECTED and not unitmap:isOnGrid(selunit) then
-    -- Considered to be unloading if selunit isn't on the grid.
+    -- Considered selunit to have just unloaded if it isn't on the grid.
     pri.cancelunload()
   elseif state == STATES.SELECTED then
     pri.deselect()
@@ -306,7 +306,7 @@ function pri.evaluateActions()
       actionmenu:showaction(g.ACTS.ATTACK)
     end
     -- Unload:
-    --(check terrain - be a bit silly if tanks try to unload in the sea and just have to cancel.)
+    --(check terrain for CARGO - be a bit silly if tanks try to unload in the sea and just have to cancel.)
     if selunit.BOARDABLE and (#selunit.boardedunits > 0) then
       actionmenu:showaction(g.ACTS.UNLOAD)
     end
@@ -322,6 +322,12 @@ function pri.evaluateActions()
       if allies then
         actionmenu:showaction(g.ACTS.SUPPLY)
       end
+    end
+    -- Join:
+    -- If on a wounded friendly unit of the same type...
+    local occupier = unitmap:getUnit(selunit.pos)
+    if occupier and (occupier ~= selunit) and (selunit.NAME == occupier.NAME) and occupier:isWounded() then
+      actionmenu:showaction(g.ACTS.JOIN)
     end
     
     actionmenu:showaction(g.ACTS.WAIT)
@@ -365,7 +371,7 @@ function actionfuncs.Board()
   pri.endMove(actionCommand)
 end
 function actionfuncs.Deploy()
-  --not sure yet, probably similar to Base deploy code.
+  --not sure yet, probably similar to Base deploy code. Wait until we get the aircraft carrier in.
 end
 function actionfuncs.Unload()
   state = STATES.ACTING
@@ -383,5 +389,10 @@ function u.World:dispatchUnload(cargo)
   
   pri.selectunit(cargo)
 end
+function actionfuncs.Join()
+  local actionCommand = com.JoinCommand(selunit)
+  pri.endMove(actionCommand)
+end
+
 
 return u

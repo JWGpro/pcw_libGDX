@@ -163,13 +163,12 @@ function u.UnloadCommand:undo()
 end
 
 u.JoinCommand = class(Command)
-function u.JoinCommand:init(unit, target)
+function u.JoinCommand:init(unit)
   self.unit = unit
-  self.target = target
   self:execute()
 end
 function u.JoinCommand:execute()
-  self.unit:join(self.target)
+  self.unit:join()
 end
 function u.JoinCommand:undo()
   --separate
