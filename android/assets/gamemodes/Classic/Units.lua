@@ -125,6 +125,9 @@ function Unit:restore()
   self.actor:resetTint()
   --you could burn fuel here for aircraft (or wait until your next turn like AW to allow 0-fuel autosupplies and block/counter).
 end
+function Unit:canOrder()
+  return self.movesleft > 0
+end
 function Unit:board(transport)
   self.pos = nil
   self.isBoarded = true

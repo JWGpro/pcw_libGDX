@@ -306,9 +306,15 @@ function pri.evaluateActions()
       actionmenu:showaction(g.ACTS.ATTACK)
     end
     -- Unload:
-    --(check terrain for CARGO - be a bit silly if tanks try to unload in the sea and just have to cancel.)
     if selunit.BOARDABLE and (#selunit.boardedunits > 0) then
-      actionmenu:showaction(g.ACTS.UNLOAD)
+      for k,unit in pairs(selunit.boardedunits) do
+        if unit:canOrder() and unitmap:getCost(unit, selunit.pos) then
+          -- If the unit has moves remaining, and can disembark where it is...
+          actionmenu:showaction(g.ACTS.UNLOAD)
+          --however, you only want to add the action ONCE, or it will create new actionmenu entries.
+          --also, you should have, as an "else", show the button but disabled. maybe disabled buttons give hints when tapped. "units have no moves!"
+        end
+      end
     end
     -- Supply:
     if selunit.SUPPLIES then
@@ -328,6 +334,12 @@ function pri.evaluateActions()
     local occupier = unitmap:getUnit(selunit.pos)
     if occupier and (occupier ~= selunit) and (selunit.NAME == occupier.NAME) and occupier:isWounded() then
       actionmenu:showaction(g.ACTS.JOIN)
+    end
+    -- Hold:
+    -- For now, only transports can Hold. canOrder() just means you can't Hold if it'd leave you with no moves left, like a Wait.
+    -- This is actually relevant for all units, but only really for Supply and Join optimisation, so i think it's just confusing and could cause bad play.
+    if selunit.BOARDABLE and selunit:canOrder() then
+      actionmenu:showaction(g.ACTS.HOLD)
     end
     
     actionmenu:showaction(g.ACTS.WAIT)
@@ -391,6 +403,10 @@ function u.World:dispatchUnload(cargo)
 end
 function actionfuncs.Join()
   local actionCommand = com.JoinCommand(selunit)
+  pri.endMove(actionCommand)
+end
+function actionfuncs.Hold()
+  local actionCommand = com.HoldCommand()
   pri.endMove(actionCommand)
 end
 

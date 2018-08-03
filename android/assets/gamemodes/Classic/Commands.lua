@@ -174,6 +174,17 @@ function u.JoinCommand:undo()
   --separate
 end
 
+u.HoldCommand = class(Command)
+function u.HoldCommand:init()
+  --
+end
+function u.HoldCommand:execute()
+  --
+end
+function u.HoldCommand:undo()
+  --
+end
+
 
 --   > Statics
 -- You will not have static commands here.
