@@ -2,8 +2,7 @@ require "class"
 local g = require "Globals"
 local cur = require "Cursor"
 local com = require "Commands"
-local tm = require "TerrainMap"
-local um = require "UnitMap"
+local m = require "Map"
 local tui = require "MapEditor/TileSelectUI"
 
 local u = {}  -- Public. World is held here, so all its instance vars and methods are public.
@@ -13,8 +12,7 @@ local pri = {}  -- Selection functions.
 local STATES = {DEFAULT = 1, SELECTED = 2, MOVED = 3, ACTING = 4}
 
 local extdir
-local terrainmap -- Contains the terrain.
-local unitmap  -- Contains the grid, handles Units, talks to the ActionMenu.
+local map
 local tileui
 local cursor
 local cam local offX local offY
@@ -48,9 +46,8 @@ function u.World:init(gameScreen, gameCamera, tiledMap, externalDir, uiStage)
   --u need to dispose of this Skin.
   --highly recommend you investigate the AssetManager.
   
-  terrainmap = tm.TerrainMap(30, 20, gameScreen)
-  unitmap = um.UnitMap(gameScreen, terrainmap, teamunits)  --mainly got this to keep the cursor in check.
-  tileui = tui.TileSelectUI(gameScreen, skin, externalDir, uiStage, terrainmap:getTerrainSet())
+  map = m.Map(30, 20, gameScreen, teamunits)
+  tileui = tui.TileSelectUI(gameScreen, skin, externalDir, uiStage, map:getTerrainSet())
   
   cursor = cur.Cursor(gameScreen)
   -- Camera init.
@@ -70,8 +67,8 @@ end
 function u.World:updateCursor(x, y)
   -- Updates the cursor position.
   --doesn't work with resizing.
-  local newX = unitmap:snap(cam.position.x - ((offX - x) * cam.zoom))
-  local newY = unitmap:snap(cam.position.y - ((y - offY) * cam.zoom))
+  local newX = map:snap(cam.position.x - ((offX - x) * cam.zoom))
+  local newY = map:snap(cam.position.y - ((y - offY) * cam.zoom))
   cursor.actor:setPosition(newX, newY)
 end
 
@@ -85,12 +82,12 @@ end
   
 function u.World:PlaceTile()
   -- Places the active tile under the cursor.
-  local curX = unitmap:short(cursor.actor:getX())
-  local curY = unitmap:short(cursor.actor:getY())
+  local curX = map:short(cursor.actor:getX())
+  local curY = map:short(cursor.actor:getY())
   
   local activetile = tileui:getActiveTile()
   local activeteam = tileui:getActiveTeam()
-  terrainmap:setTerrain(curX, curY, activetile, activeteam)
+  map:setTerrain(curX, curY, activetile, activeteam)
   
   --could be units, so needs to be able to move onto the terrain there.
 end
@@ -131,11 +128,11 @@ function u.World:ReplayResume()
 end
 
 function u.World:SaveMap()
-  terrainmap:saveMap(extdir .. "PCW/maps/test_tbl.map")
+  map:saveMap(extdir .. "PCW/maps/test_tbl.map")
 end
 
 function u.World:LoadMap()
-  terrainmap:loadMap(extdir .. "PCW/maps/test_tbl.map")
+  map:loadMap(extdir .. "PCW/maps/test_tbl.map")
 end
 
 return u

@@ -28,8 +28,6 @@ function u.MoveCommand:undo()
 end
 
 -- Everything below is action commands.
--- Action commands are only ever undone via replay rewind, in combination with a move command.
--- Therefore, there's no need for any action command to store (for undo) anything covered by the move command undo (e.g. unit:snapback).
 
 u.WaitCommand = class(Command)
 -- The wait command might seem unnecessary, and appended to all action commands - but at least Board must not wait() the unit.

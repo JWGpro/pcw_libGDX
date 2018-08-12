@@ -7,7 +7,7 @@ local u = {}  -- Public.
 local world
 local java
 local uistage
-local unitmap
+local map
 
 -- Display elements
 local unitLabel
@@ -27,11 +27,11 @@ local function update()
 end
 
 u.UnloadMenu = class()
-function u.UnloadMenu:init(caller, gameScreen, skin, uiStage, unitMap)
+function u.UnloadMenu:init(caller, gameScreen, skin, uiStage, theMap)
   world = caller
   java = gameScreen
   uistage = uiStage
-  unitmap = unitMap
+  map = theMap
   
   container = java:reflect("com.badlogic.gdx.scenes.scene2d.ui.Table", {}, {})
   container:setFillParent(true)

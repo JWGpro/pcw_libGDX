@@ -30,9 +30,26 @@ function runlistener(func, obj, args, event, actor)
   end
 end
 
+--none of this actually works lmao.
+--resumeFlag = false
+--function suspend()
+--  local starttime = os.clock()
+--  print("suspended...")
+--  os.exit()
+--  while not resumeFlag do
+--    -- Wait for Java to resume execution by calling resume() in main.
+--    java:renderNext()
+--  end
+--  print("resumed after " .. (os.clock() - starttime) .. " seconds")
+--  resumeFlag = false
+--end
+--function resume()
+--  print("resuming")
+--  resumeFlag = true
+--end
+
 function loop(delta)
   -- Don't know what will actually end up here yet. You have the timedelta there if you want to play with it. Though anim should be abstracted.
---  print(#history)
 end
 
 -- Input event handling methods below.

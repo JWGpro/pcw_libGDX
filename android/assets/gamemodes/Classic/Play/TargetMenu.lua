@@ -7,7 +7,7 @@ local u = {}  -- Public.
 local world
 local java
 local uistage
-local unitmap
+local map
 
 -- Battle outcome display elements
 local nameStringA
@@ -50,8 +50,8 @@ local function updateWeapon(wepIndex)
   nameStringB:setText(target.NAME)
   outcomeStringA:setText(selunit.hp .. " >> " .. outcome.attackerHP)  --could zero-pad both for consistency
   outcomeStringB:setText(target.hp .. " >> " .. outcome.defenderHP)
-  defenceStringA:setText(tostring(unitmap:getDefence(selunit.pos)))  --stringify to ***, or better, iconify
-  defenceStringB:setText(tostring(unitmap:getDefence(target.pos)))
+  defenceStringA:setText(tostring(map:getDefence(selunit.pos)))  --stringify to ***, or better, iconify
+  defenceStringB:setText(tostring(map:getDefence(target.pos)))
   weaponStringA:setText(weapon.NAME .. " (" .. g.AMMOMOD[weapon.AMMOTYPE][target.ARMOUR] .. ")")
   if targetwep then
     weaponStringB:setText(targetwep.NAME .. " (" .. g.AMMOMOD[targetwep.AMMOTYPE][selunit.ARMOUR] .. ")")
@@ -60,15 +60,15 @@ local function updateWeapon(wepIndex)
   end
   
   -- Show weapon attack range
-  unitmap:clearRanges()
-  unitmap:displayAttackRange(weapon, selunit.pos)
+  map:clearRanges()
+  map:displayAttackRange(weapon, selunit.pos)
 end
 
 local function updateTarget(newTarget)
   target = newTarget
   validweps = selunit:validweps(selunit.pos, target, indirectallowed)
   
-  world:setCamera(unitmap:long(target.pos.x), unitmap:long(target.pos.y))
+  world:setCamera(map:long(target.pos.x), map:long(target.pos.y))
   --highlight target, uniquely (camera isn't enough)
   
   updateWeapon(validweps[1])
@@ -87,11 +87,11 @@ local function changeWep()
 end
 
 u.TargetMenu = class()
-function u.TargetMenu:init(caller, gameScreen, skin, uiStage, unitMap)
+function u.TargetMenu:init(caller, gameScreen, skin, uiStage, theMap)
   world = caller
   java = gameScreen
   uistage = uiStage
-  unitmap = unitMap
+  map = theMap
   
   container = java:reflect("com.badlogic.gdx.scenes.scene2d.ui.Table", {}, {})
   container:setFillParent(true)
@@ -158,7 +158,7 @@ function u.TargetMenu:confirm()
 end
 
 function u.TargetMenu:clear()
-  unitmap:clearRanges()
+  map:clearRanges()
   container:remove()
 end
 

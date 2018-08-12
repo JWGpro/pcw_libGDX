@@ -2,8 +2,7 @@ require "class"
 local g = require "Globals"
 local cur = require "Cursor"
 local com = require "Commands"
-local tm = require "TerrainMap"
-local um = require "UnitMap"
+local m = require "Map"
 local amenu = require "Play/ActionMenu"
 local dmenu = require "Play/DeployMenu"
 local tmenu = require "Play/TargetMenu"
@@ -15,8 +14,7 @@ local pri = {}  -- Selection functions.
 -- Constants
 local STATES = {DEFAULT = "Default", SELECTED = "Selected", MOVED = "Moved", ACTING = "Acting", MENU = "Menu"}
 
-local terrainmap -- Contains the terrain grid.
-local unitmap  -- Contains the unit grid, handles Units, talks to the ActionMenu...several purposes. Layered on top of TerrainMap.
+local map
 local actionmenu
 local deploymenu
 local targetmenu
@@ -45,21 +43,17 @@ end
 
 u.World = class()
 function u.World:init(gameScreen, gameCamera, tiledMap, externalDir, uiStage)
-  local fh = gameScreen:reflect("com.badlogic.gdx.files.FileHandle",
-    {"String"}, {externalDir .. "PCW/menuskins/Glassy/glassy-ui.json"})
-  local skin = gameScreen:reflect("com.badlogic.gdx.scenes.scene2d.ui.Skin",
-    {"FileHandle"}, {fh})
+  local skin = gameScreen:newSkin(externalDir .. "PCW/menuskins/Glassy/glassy-ui.json")
   --u need to dispose of this Skin.
   --highly recommend you investigate the AssetManager.
   
-  terrainmap = tm.TerrainMap(30, 20, gameScreen)  -- load a map here. either in init() or call loadMap().
-  terrainmap:loadMap(externalDir .. "PCW/maps/test_tbl.map")
-  unitmap = um.UnitMap(gameScreen, terrainmap, teamunits)
+  map = m.Map(30, 20, gameScreen, teamunits)  --load a map here. either in init() or call loadMap().
+  map:loadMap(externalDir .. "PCW/maps/test_tbl.map")
   
   actionmenu = amenu.ActionMenu(gameScreen, skin, uiStage, actionfuncs)
   deploymenu = dmenu.DeployMenu(self, gameScreen, skin, uiStage)
-  targetmenu = tmenu.TargetMenu(self, gameScreen, skin, uiStage, unitmap)
-  unloadmenu = umenu.UnloadMenu(self, gameScreen, skin, uiStage, unitmap)
+  targetmenu = tmenu.TargetMenu(self, gameScreen, skin, uiStage, map)
+  unloadmenu = umenu.UnloadMenu(self, gameScreen, skin, uiStage, map)
   
   cursor = cur.Cursor(gameScreen)
   -- Camera init.
@@ -76,8 +70,8 @@ end
 function u.World:updateCursor(x, y)
   -- Updates the cursor position.
   --doesn't work with resizing.
-  local newX = unitmap:snap(cam.position.x - ((offX - x) * cam.zoom))
-  local newY = unitmap:snap(cam.position.y - ((y - offY) * cam.zoom))
+  local newX = map:snap(cam.position.x - ((offX - x) * cam.zoom))
+  local newY = map:snap(cam.position.y - ((y - offY) * cam.zoom))
   cursor.actor:setPosition(newX, newY)
 end
 
@@ -96,21 +90,21 @@ end
   
 function u.World:selectNext()
   -- Advances the selection state using the cursor.
-  local curpos = Vector2(unitmap:short(cursor.actor:getX()), unitmap:short(cursor.actor:getY()))
+  local curpos = Vector2(map:short(cursor.actor:getX()), map:short(cursor.actor:getY()))
   
   if state == STATES.DEFAULT then
-    local unit = unitmap:getUnit(curpos)
-    local prop = terrainmap:getTerrain(curpos)
+    local unit = map:getUnit(curpos)
+    local prop = map:getTerrain(curpos)
     -- Select unit first, then any deployment property beneath.
     if unit and unit.movesleft > 0 then  -- Make sure the unit can still move!
       pri.selectunit(unit)
-    elseif prop.UNITS_DEPLOYABLE and prop.team == player and (not unitmap:getUnit(curpos)) then
+    elseif prop.UNITS_DEPLOYABLE and prop.team == player and (not map:getUnit(curpos)) then
       pri.selectproperty(prop)
     end
     
   elseif state == STATES.SELECTED then
     if selunit.team == player  -- Make sure you own the unit!
-    and unitmap:isValidDestination(curpos) then  -- Make sure the unit can move there!
+    and map:isValidDestination(curpos) then  -- Make sure the unit can move there!
       pri.moveunit(curpos)
     end
     
@@ -126,7 +120,7 @@ end
 
 function u.World:cancelLast()
   -- Rolls back the selection state.
-  if state == STATES.SELECTED and not unitmap:isOnGrid(selunit) then
+  if state == STATES.SELECTED and not map:isOnGrid(selunit) then
     -- Considered selunit to have just unloaded if it isn't on the grid.
     pri.cancelunload()
   elseif state == STATES.SELECTED then
@@ -189,7 +183,7 @@ function u.World:RangeAllOn()
 end
 
 function u.World:PrintDebugInfo()
-  local curpos = Vector2(unitmap:short(cursor.actor:getX()), unitmap:short(cursor.actor:getY()))
+  local curpos = Vector2(map:short(cursor.actor:getX()), map:short(cursor.actor:getY()))
   local selunitName = "none"
   if selunit then selunitName = selunit.NAME end
   print("Debug info @ time " .. os.clock() .. ":\n Cursor position: " .. tostring(curpos) .. "\n State: " .. state .. "\n selunit: " .. selunitName)
@@ -212,12 +206,12 @@ end
 -- Advancing
 function pri.selectunit(unit)
   selunit = unit
-  unitmap:displayRanges(selunit)
+  map:displayRanges(selunit)
   state = STATES.SELECTED
 end
 
 function pri.moveunit(destination)
-  unitmap:hideRanges()
+  map:hideRanges()
   indirectallowed = (selunit.pos:equals(destination))
   moveCommand = com.MoveCommand(selunit, destination)
   pri.evaluateActions()
@@ -239,15 +233,15 @@ end
 function pri.deselect()
   selunit = nil
   moveCommand = nil
-  unitmap:clearRanges()
-  unitmap:clearTargets()
+  map:clearRanges()
+  map:clearTargets()
   actionmenu:clear()
   state = STATES.DEFAULT
 end
 
 function pri.demove()
   moveCommand:undo()  -- No need to nil this because the reference will be overwritten by the next MoveCommand.
-  unitmap:displayRanges(selunit)
+  map:displayRanges(selunit)
   actionmenu:clear()
   state = STATES.SELECTED
 end
@@ -260,8 +254,8 @@ function pri.deaction()
 end
 
 function pri.cancelunload()
-  -- This rolls back one step as you'd expect. Doesn't look very elegant though.
-  local transport = unitmap:getUnit(selunit.pos)
+  -- This rolls back one step as you'd expect. Maybe not very elegant though.
+  local transport = map:getUnit(selunit.pos)
   
   local unload = history[historyposition]
   unload:undo()
@@ -292,23 +286,23 @@ function pri.evaluateActions()
   
   -- Board:
   -- If on boardable unit, show Board. Otherwise, evaluate the other actions - which includes the mutually exclusive Wait.
-  if unitmap:isBoardable(selunit.pos) then
+  if map:isBoardable(selunit.pos) then
     actionmenu:showaction(g.ACTS.BOARD)
   else
     -- Capture:
-    local prop = terrainmap:getTerrain(selunit.pos)
+    local prop = map:getTerrain(selunit.pos)
     if prop.IS_PROPERTY and prop.team ~= selunit.team then
       actionmenu:showaction(g.ACTS.CAPTURE)
     end
     -- Attack:
-    local targets = unitmap:getTargets(selunit.pos)
+    local targets = map:getTargets(selunit.pos)
     if targets and (#targets > 0) then
       actionmenu:showaction(g.ACTS.ATTACK)
     end
     -- Unload:
     if selunit.BOARDABLE and (#selunit.boardedunits > 0) then
       for k,unit in pairs(selunit.boardedunits) do
-        if unit:canOrder() and unitmap:getCost(unit, selunit.pos) then
+        if unit:canOrder() and map:getCost(unit, selunit.pos) then
           -- If the unit has moves remaining, and can disembark where it is...
           actionmenu:showaction(g.ACTS.UNLOAD)
           --however, you only want to add the action ONCE, or it will create new actionmenu entries.
@@ -319,8 +313,8 @@ function pri.evaluateActions()
     -- Supply:
     if selunit.SUPPLIES then
       local allies = false
-      for _,neighbour in pairs(unitmap:neighbourCells(selunit.pos)) do
-        local unit = unitmap:getUnit(neighbour)
+      for _,neighbour in pairs(map:neighbourCells(selunit.pos)) do
+        local unit = map:getUnit(neighbour)
         if unit and unit.team == selunit.team then  --and can supply the ally
           allies = true
         end
@@ -331,12 +325,12 @@ function pri.evaluateActions()
     end
     -- Join:
     -- If on a wounded friendly unit of the same type...
-    local occupier = unitmap:getUnit(selunit.pos)
+    local occupier = map:getUnit(selunit.pos)
     if occupier and (occupier ~= selunit) and (selunit.NAME == occupier.NAME) and occupier:isWounded() then
       actionmenu:showaction(g.ACTS.JOIN)
     end
     -- Hold:
-    -- For now, only transports can Hold. canOrder() just means you can't Hold if it'd leave you with no moves left, like a Wait.
+    -- For now, only transports can Hold. canOrder() means you can't Hold if it'd leave you with no moves left (that'd be Wait). More like "couldOrder()".
     -- This is actually relevant for all units, but only really for Supply and Join optimisation, so i think it's just confusing and could cause bad play.
     if selunit.BOARDABLE and selunit:canOrder() then
       actionmenu:showaction(g.ACTS.HOLD)
@@ -350,7 +344,7 @@ function actionfuncs.Attack()
   state = STATES.ACTING
   actionmenu:clear()  --eventually hide().
   
-  local targets = unitmap:getTargets(selunit.pos)
+  local targets = map:getTargets(selunit.pos)
   targetmenu:show(selunit, targets, indirectallowed)
 end
 function u.World:dispatchAttack(wepindex, target)
@@ -358,14 +352,14 @@ function u.World:dispatchAttack(wepindex, target)
   pri.endMove(actionCommand)
 end
 function actionfuncs.Capture()
-  local prop = terrainmap:getTerrain(selunit.pos)
+  local prop = map:getTerrain(selunit.pos)
   local actionCommand = com.CaptureCommand(selunit, prop)
   pri.endMove(actionCommand)
 end
 function actionfuncs.Supply()
   local targets = {}
-  for _,neighbour in pairs(unitmap:neighbourCells(selunit.pos)) do
-    local target = unitmap:getUnit(neighbour)
+  for _,neighbour in pairs(map:neighbourCells(selunit.pos)) do
+    local target = map:getUnit(neighbour)
     if target and target.team == selunit.team then
       table.insert(targets, target)
     end
@@ -378,7 +372,7 @@ function actionfuncs.Wait()
   pri.endMove(actionCommand)
 end
 function actionfuncs.Board()
-  local destunit = unitmap:getUnit(selunit.pos)
+  local destunit = map:getUnit(selunit.pos)
   local actionCommand = com.BoardCommand(selunit, destunit)
   pri.endMove(actionCommand)
 end

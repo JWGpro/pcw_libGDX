@@ -10,9 +10,9 @@ local statics = {}
 
 local u = {}  -- Public.
 
-function u.init(gameScreen, unitMap, teamUnits)
+function u.init(gameScreen, theMap, teamUnits)
   java = gameScreen
-  map = unitMap
+  map = theMap
   teamunits = teamUnits
 end
 
@@ -158,21 +158,48 @@ function Unit:getmoves()
   end
 end
 function Unit:move(dest, direction)
+  -- Get the A* path and cost.
+  local astars = map:astar(self, dest)
+  
+  local path = {}
+  local start = self.pos
+  local check = map:getVector(dest.x, dest.y)
+  -- Recreate the A* path from end to start.
+  while not check:equals(start) do
+    -- Add the current cell to the path.
+    table.insert(path, check)
+    -- Get the next cell in the path.
+    check = astars.trace[check]
+  end
+  
+  --seems to be a bug with demoving an APC from trees, moves are not restored.
+  --ye because cost to go forwards is 2 and cost to go backwards is 1. lol.
+  --so use the difference between cost(start) and cost(dest) or sth.
+  
   -- Direction should be +1 (forwards) or -1 (backwards). But I guess it could be used as a general cost modifier (e.g. for snow).
-  local fuelcost = direction * self.pos:mandist(dest)
+  local fuelcost = direction * astars.cost
   -- Deduct spaces moved, and burn (or add) fuel.
   self.movesleft = self.movesleft - fuelcost
   self:burnfuel(fuelcost)
-  -- Update coordinates.
+  -- Update coordinates (if possible - handled by the methods themselves).
   map:killUnitRef(self)
   self.pos = dest
   map:storeUnitRef(self)
   
   if direction > 0 then
-    --move the unit with an animation if forwards. (At the moment there is no animation.)
-    self:placeActor(dest)
+    -- Forwards: iterate backwards over the path and animate the unit through it.
+    for i = #path, 1, -1 do
+      local x = map:long(path[i].x)
+      local y = map:long(path[i].y)
+      java:moveActorTo(self.actor, x, y, 1)
+      -- Wait for Java to resume execution (after the animation finishes).
+--      suspend()
+    end
+--    local x = map:long(path[1].x)
+--    local y = map:long(path[1].y)
+--    self.actor:moveTo(x, y, 1)
   else
-    -- Snap back.
+    -- Backwards: just snap back.
     self:placeActor(dest)
   end
 end
