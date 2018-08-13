@@ -191,17 +191,17 @@ function Unit:move(dest, direction)
     for i = #path, 1, -1 do
       local x = map:long(path[i].x)
       local y = map:long(path[i].y)
-      java:moveActorTo(self.actor, x, y, 1)
-      -- Wait for Java to resume execution (after the animation finishes).
---      suspend()
+      local cellcost = map:getCost(self, path[i])  -- The unit will move slower in proportion to the cost of moving into the cell.
+      queue(self.actor.moveTo, self.actor, x, y, 0.05 * cellcost)
+      queue(blockIf, self.isMoving, self)  -- Must be queued, as unit won't be moving until the next frame (when queue is accessed).
     end
---    local x = map:long(path[1].x)
---    local y = map:long(path[1].y)
---    self.actor:moveTo(x, y, 1)
   else
     -- Backwards: just snap back.
     self:placeActor(dest)
   end
+end
+function Unit:isMoving()
+  return (self.actor:getActions().size > 0)
 end
 function Unit:simulateAttack(target, wepindex)
   return g.damageCalc(self.CLASS, self.hp, wepindex, target.CLASS, target.hp, map:getDefence(target.pos))

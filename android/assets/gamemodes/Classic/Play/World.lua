@@ -12,7 +12,7 @@ local u = {}  -- Public. World is held here, so all its instance vars and method
 local pri = {}  -- Selection functions.
 
 -- Constants
-local STATES = {DEFAULT = "Default", SELECTED = "Selected", MOVED = "Moved", ACTING = "Acting", MENU = "Menu"}
+local STATES = {DEFAULT = "Default", SELECTED = "Selected", MOVED = "Moved", ACTING = "Acting", MENU = "Menu", BLOCKING = "Blocking"}
 
 local map
 local actionmenu
@@ -115,6 +115,8 @@ function u.World:selectNext()
   elseif state == STATES.ACTING then
     --Select target and attack it.
     --no because we decided to do it by UI as above. so could it be integrated into action menu...? or need a class for each?
+  elseif state == STATES.BLOCKING then
+    -- Inputs are blocked while something is happening - probably an animation.
   end
 end
 
@@ -133,6 +135,8 @@ function u.World:cancelLast()
   elseif state == STATES.MENU then
     -- Or just closes any menus.
     self:closemenus()
+  elseif state == STATES.BLOCKING then
+    -- Inputs are blocked while something is happening - probably an animation.
   end
   
 end
@@ -214,8 +218,11 @@ function pri.moveunit(destination)
   map:hideRanges()
   indirectallowed = (selunit.pos:equals(destination))
   moveCommand = com.MoveCommand(selunit, destination)
+  state = STATES.BLOCKING
+  queue(function ()  -- The statements following the MoveCommand must be queued to occur after its finish.
   pri.evaluateActions()
   state = STATES.MOVED
+  end)
 end
 
 function pri.endMove(actionCommand)

@@ -7,6 +7,7 @@
 local modepath = "PCW/gamemodes/Classic"
 local world
 local inputmap
+local queueList = {}
 
 local lastX local lastY
 
@@ -30,26 +31,25 @@ function runlistener(func, obj, args, event, actor)
   end
 end
 
---none of this actually works lmao.
---resumeFlag = false
---function suspend()
---  local starttime = os.clock()
---  print("suspended...")
---  os.exit()
---  while not resumeFlag do
---    -- Wait for Java to resume execution by calling resume() in main.
---    java:renderNext()
---  end
---  print("resumed after " .. (os.clock() - starttime) .. " seconds")
---  resumeFlag = false
---end
---function resume()
---  print("resuming")
---  resumeFlag = true
---end
+function queue(func, ...)
+  -- A FIFO queue of functions and their arguments.
+  table.insert(queueList, {func, ...})
+end
 
+function blockIf(func, ...)
+  -- Continually adds itself to the front of the queue if the function evaluates to true.
+  --you'd think there'd be a cleaner way to defer evaluation of an arbitrary condition...
+  if func(...) then
+    table.insert(queueList, 1, {blockIf, func, ...})
+  end
+end
 function loop(delta)
   -- Don't know what will actually end up here yet. You have the timedelta there if you want to play with it. Though anim should be abstracted.
+  if next(queueList) ~= nil then
+    local functable = table.remove(queueList, 1)
+    local func = table.remove(functable, 1)
+    func(table.unpack(functable))
+  end
 end
 
 -- Input event handling methods below.

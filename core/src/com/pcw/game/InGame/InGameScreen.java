@@ -29,11 +29,6 @@ import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.pcw.game.PCW;
 import com.pcw.game.Scripting.ScriptManager;
-import org.luaj.vm2.Globals;
-import org.luaj.vm2.LuaValue;
-import org.luaj.vm2.lib.CoroutineLib;
-import org.luaj.vm2.lib.jse.CoerceJavaToLua;
-import org.luaj.vm2.lib.jse.JsePlatform;
 
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
@@ -92,32 +87,6 @@ public class InGameScreen implements Screen, InputProcessor, GestureListener {
                 Input.Keys.class,
                 Input.Buttons.class
         );
-        // This almost works, but complains about "no OpenGL context found in the current thread" from Lua.
-//        Globals g = JsePlatform.standardGlobals();
-//        g.load(new CoroutineLib());
-//        g.load(Gdx.files.external("PCW/gamemodes/Classic/main.lua").reader(), "main.lua").call();
-//        g.load("init = coroutine.wrap(init)").call();
-//
-//        Object[] objects = {
-//                childMode,
-//                this,
-//                gameCamera,
-//                gameStage,
-//                UICamera,
-//                UIStage,
-//                tiledMap,
-//                Gdx.files.getExternalStoragePath(),
-//                Input.Keys.class,
-//                Input.Buttons.class
-//        };
-//        LuaValue[] params = new LuaValue[objects.length];
-//        int i = 0;
-//        for (Object object : objects) {
-//            // Convert each parameter to a form that's usable by Lua
-//            params[i] = CoerceJavaToLua.coerce(object);
-//            i++;
-//        }
-//        g.get("init").invoke(params);
 
         // Set input processor to allow the argument to receive input events.
         // If you pass "stage", any stage.addListener stuff works, and Actor actions work.
@@ -272,14 +241,6 @@ public class InGameScreen implements Screen, InputProcessor, GestureListener {
         }
     }
 
-    public void renderNext() {
-        float delta = Gdx.graphics.getDeltaTime();
-        this.render(delta);
-    }
-    public void moveActorTo(MapActor luaactor, float x, float y, float duration) {
-        luaactor.moveTo(x, y, duration);
-    }
-
     @Override
     public void show() {
 
@@ -304,6 +265,7 @@ public class InGameScreen implements Screen, InputProcessor, GestureListener {
         UIStage.draw();
 
 //        System.out.println((runtime.totalMemory() - runtime.freeMemory()) / 1048576);
+//        System.out.println(1/delta);  // Makeshift framerate display
     }
 
     @Override

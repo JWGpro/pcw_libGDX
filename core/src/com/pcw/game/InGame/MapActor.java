@@ -50,44 +50,10 @@ public class MapActor extends Actor {
 
     // getColour method
 
-//    public void moveTo(float x, float y, float duration, ScriptManager scriptmanager, String parentmode) {
-////        MoveToAction action = new MoveToAction();
-////        action.setPosition(x, y);
-////        action.setDuration(duration);
-//////        action.setInterpolation(Interpolation.linear);
-////        this.addAction(action);
-//
-//        final ScriptManager sm = scriptmanager;
-//        final String pm = parentmode;
-//        this.addAction(Actions.sequence(Actions.moveTo(x, y, duration), Actions.run(new Runnable(){
-//            public void run () {
-//                System.out.println("action done");
-//                sm.executeFunction(pm, "resume");
-//            }
-//        })));
-//    }
-
     public void moveTo(float x, float y, float duration) {
-//        MoveToAction action = new MoveToAction();
-//        action.setPosition(x, y);
-//        action.setDuration(duration);
-////        action.setInterpolation(Interpolation.linear);
-//        this.addAction(action);
-
-        Globals g = JsePlatform.standardGlobals();
-
+        // Apparently this action is pooled.
         this.addAction(Actions.moveTo(x, y, duration));
-        g.yield(LuaValue.NONE);
     }
-
-//    public void moveTo(float x, float y, float duration) {
-//        // Apparently this action is pooled.
-//        this.addAction(Actions.sequence(Actions.moveTo(x, y, duration), Actions.run(new Runnable(){
-//            public void run () {
-//                System.out.println("action done");
-//            }
-//        })));
-//    }
 
     public void hide() {
         // How is this any different to killing the unit?
