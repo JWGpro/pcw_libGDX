@@ -158,6 +158,13 @@ function Unit:getmoves()
   end
 end
 function Unit:move(dest, direction)
+  -- Direction should be +1 (forwards) or -1 (backwards). But I guess it could be used as a general cost modifier (e.g. for snow).
+  
+  -- Do nothing for a zero-move.
+  if dest:equals(self.pos) then
+    return
+  end
+  
   -- Get the A* path and cost.
   local astars = map:astar(self, dest)
   
@@ -172,19 +179,7 @@ function Unit:move(dest, direction)
     check = astars.trace[check]
   end
   
-  --seems to be a bug with demoving an APC from trees, moves are not restored.
-  --ye because cost to go forwards is 2 and cost to go backwards is 1. lol.
-  --so use the difference between cost(start) and cost(dest) or sth.
-  
-  -- Direction should be +1 (forwards) or -1 (backwards). But I guess it could be used as a general cost modifier (e.g. for snow).
-  local fuelcost = direction * astars.cost
-  -- Deduct spaces moved, and burn (or add) fuel.
-  self.movesleft = self.movesleft - fuelcost
-  self:burnfuel(fuelcost)
-  -- Update coordinates (if possible - handled by the methods themselves).
-  map:killUnitRef(self)
-  self.pos = dest
-  map:storeUnitRef(self)
+  local fuelcost
   
   if direction > 0 then
     -- Forwards: iterate backwards over the path and animate the unit through it.
@@ -193,12 +188,23 @@ function Unit:move(dest, direction)
       local y = map:long(path[i].y)
       local cellcost = map:getCost(self, path[i])  -- The unit will move slower in proportion to the cost of moving into the cell.
       queue(self.actor.moveTo, self.actor, x, y, 0.05 * cellcost)
-      queue(blockIf, self.isMoving, self)  -- Must be queued, as unit won't be moving until the next frame (when queue is accessed).
+      queue(blockWhile, self.isMoving, self)  -- Must be queued, as unit won't be moving until the next frame (when queue is accessed).
     end
+    fuelcost = direction * astars.cost
   else
-    -- Backwards: just snap back.
+    -- Backwards: just snap back. But adjust the fuel cost, as there was a cost to move to the current space, and no cost to move from path[1].
     self:placeActor(dest)
+    fuelcost = direction * (astars.cost + map:getCost(self, start) - map:getCost(self, path[1]))
   end
+  
+  -- Deduct spaces moved, and burn (or add) fuel.
+  self.movesleft = self.movesleft - fuelcost
+  self:burnfuel(fuelcost)
+  
+  -- Update coordinates (if possible - handled by the methods themselves).
+  map:killUnitRef(self)
+  self.pos = dest
+  map:storeUnitRef(self)
 end
 function Unit:isMoving()
   return (self.actor:getActions().size > 0)

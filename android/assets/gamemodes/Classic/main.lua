@@ -36,11 +36,11 @@ function queue(func, ...)
   table.insert(queueList, {func, ...})
 end
 
-function blockIf(func, ...)
+function blockWhile(func, ...)
   -- Continually adds itself to the front of the queue if the function evaluates to true.
   --you'd think there'd be a cleaner way to defer evaluation of an arbitrary condition...
   if func(...) then
-    table.insert(queueList, 1, {blockIf, func, ...})
+    table.insert(queueList, 1, {blockWhile, func, ...})
   end
 end
 function loop(delta)
