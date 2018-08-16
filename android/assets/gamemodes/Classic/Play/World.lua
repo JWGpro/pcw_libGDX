@@ -154,8 +154,8 @@ function u.World:ReplayUndo()
   if historyposition == 0 then
     print("Replay: This is the start of the game!")
   else
-    print("Replay: Undoing move " .. historyposition .. "...")
     local previousmove = history[historyposition]
+    print("Replay: Undoing command " .. previousmove.NAME .. " (#" .. historyposition .. ")...")
     previousmove:undo()
     historyposition = historyposition - 1
   end
@@ -166,8 +166,8 @@ function u.World:ReplayRedo()
     print("Replay: This is the end of the replay!")
   else
     historyposition = historyposition + 1
-    print("Replay: Redoing move " .. historyposition .. "...")
     local nextmove = history[historyposition]
+    print("Replay: Redoing command " .. nextmove.NAME .. " (#" .. historyposition .. ")...")
     nextmove:execute()
   end
 end
@@ -194,14 +194,21 @@ function u.World:PrintDebugInfo()
 end
 
 function u.World:NextTurn()
-  -- Restore the units of the current player.
-  for i,unit in ipairs(teamunits[player]) do
-    unit:restore()
-  end
-  -- Cycle control.
-  player = g.cycle(players, player, 1)
-  print("It's " .. player .. "'s turn!")
+  local command = com.TurnEnd(self, teamunits[player])
+  table.insert(history, command)
+  historyposition = #history
 end
+
+function u.World:cyclePlayer(direction)
+  player = g.cycle(players, player, direction)
+  local str = "It's " .. player .. "'s turn"
+  if direction > 0 then
+    str = str .. "!"
+  else
+    str = str .. " again..."
+  end
+  print(str)
+end  
 
 -------------------------
 -- Selection functions --
@@ -220,9 +227,9 @@ function pri.moveunit(destination)
   moveCommand = com.MoveCommand(selunit, destination)
   state = STATES.BLOCKING
   queue(function ()  -- The statements following the MoveCommand must be queued to occur after its finish.
-  pri.evaluateActions()
-  state = STATES.MOVED
-  end)
+      pri.evaluateActions()
+      state = STATES.MOVED
+    end)
 end
 
 function pri.endMove(actionCommand)

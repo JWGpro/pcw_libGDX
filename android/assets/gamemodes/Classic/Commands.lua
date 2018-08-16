@@ -13,6 +13,7 @@ local u = {}
 
 u.MoveCommand = class(Command)
 function u.MoveCommand:init(unit, dest)
+  self.NAME = "Move"
   self.unit = unit
   self.startpos = unit.pos
   self.dest = dest
@@ -34,6 +35,7 @@ u.WaitCommand = class(Command)
 -- For now, the implementation here (wait and restore) is copypasted to every command that needs it, instead of storing another WaitCommand.
 -- That might prove shortsighted.
 function u.WaitCommand:init(unit)
+  self.NAME = "Wait"
   self.unit = unit
   self:execute()
 end
@@ -46,6 +48,7 @@ end
 
 u.AttackCommand = class(Command)
 function u.AttackCommand:init(unit, wepindex, target)
+  self.NAME = "Attack"
   self.unit = unit
   self.unitHp = unit.hp
   self.wepindex = wepindex
@@ -65,6 +68,7 @@ end
 
 u.CaptureCommand = class(Command)
 function u.CaptureCommand:init(unit, property)
+  self.NAME = "Capture"
   self.unit = unit
   self.property = property
   self.propertyCap = property.capStrength
@@ -81,6 +85,7 @@ end
 
 u.SupplyCommand = class(Command)
 function u.SupplyCommand:init(unit, targets)
+  self.NAME = "Supply"
   self.unit = unit
   self.targets = targets
   --for each target getSupply()
@@ -100,6 +105,7 @@ end
 u.BuildCommand = class(Command)
 function u.BuildCommand:init(building, unit)
   -- Only done by a building.
+  self.NAME = "Build"
   self.source = building
   self.product = unit
 --  self.money
@@ -115,6 +121,7 @@ end
 u.DeployCommand = class(Command)
 function u.DeployCommand:init(unit, cargo)
   -- This is how units like aircraft carriers do it. The deployed unit stays inside the transport until an unload command.
+  self.NAME = "Deploy"
   self.unit = unit
   self.cargo = cargo
 --  self.money
@@ -129,6 +136,7 @@ end
 
 u.BoardCommand = class(Command)
 function u.BoardCommand:init(cargo, transport)
+  self.NAME = "Board"
   self.cargo = cargo
   self.transport = transport
   self:execute()
@@ -143,6 +151,7 @@ end
 
 u.UnloadCommand = class(Command)
 function u.UnloadCommand:init(transport, cargo)
+  self.NAME = "Unload"
   self.transport = transport
   self.cargo = cargo
   self:execute()
@@ -162,6 +171,7 @@ end
 
 u.JoinCommand = class(Command)
 function u.JoinCommand:init(unit)
+  self.NAME = "Join"
   self.unit = unit
   self:execute()
 end
@@ -174,7 +184,7 @@ end
 
 u.HoldCommand = class(Command)
 function u.HoldCommand:init()
-  --
+  self.NAME = "Hold"
 end
 function u.HoldCommand:execute()
   --
@@ -211,15 +221,54 @@ function u.GameMove:init(moveCommand, actionCommand)
   -- Though at the moment, the "unit" component isn't used as each command holds a reference to the unit anyway.
   self.moveCommand = moveCommand
   self.actionCommand = actionCommand
+  self.NAME = actionCommand.NAME
 end
 function u.GameMove:execute()
   self.moveCommand:execute()
-  self.actionCommand:execute()
+  queue(function () 
+      self.actionCommand:execute()
+    end)
 end
 function u.GameMove:undo()
   -- Undo in the reverse order (it matters).
   self.actionCommand:undo()
   self.moveCommand:undo()
+end
+
+-- Other commands.
+
+u.TurnEnd = class(Command)
+function u.TurnEnd:init(world, units)
+  self.NAME = "TurnEnd"
+  self.world = world
+  self.units = units
+  self.states = {}
+  -- Storing unit states for undo.
+  for i,unit in ipairs(self.units) do
+    self.states[i] = {unit.movesleft, unit.canOrder}
+  end
+  self:execute()
+end
+function u.TurnEnd:execute()
+  -- Restore the units of the current player.
+  for i,unit in ipairs(self.units) do
+    unit:restore()
+  end
+  -- Cycle control.
+  self.world:cyclePlayer(1)
+end
+function u.TurnEnd:undo()
+  -- Give back control.
+  self.world:cyclePlayer(-1)
+  -- Reset the states of the units.
+  for i,unit in ipairs(self.units) do
+    -- movesleft.
+    unit.movesleft = self.states[i][1]
+    if not self.states[i][2] then
+      -- waited state.
+      unit:wait()
+    end
+  end
 end
 
 
