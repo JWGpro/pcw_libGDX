@@ -42,9 +42,7 @@ function Unit:init(x, y, teamID)
   self.team = teamID
   self.hp = self.MAXHP
   self.fuel = self.MAXFUEL
-  -- Sets maximum and remaining moves.
-  self.maxmoves = self:getmoves()
-  self.movesleft = self.maxmoves  -- This is set a lot, but only checked at selection to make sure you can still move. So, 0 = "ordered".
+  self:restore()  -- Predeployed units will be movable. Deployed units should not, as DeployMenu will tell them to wait().
   self.isBoarded = false
 end
 function Unit:placeActor(vector)
@@ -115,17 +113,20 @@ function Unit:movesused()
   return (self.maxmoves - self.movesleft)
 end
 function Unit:wait()
-  self.movesleft = 0
+  self.canOrder = false
   self.actor:tint(0x7f7f7fff)  -- Grey
 end
+function Unit:unwait()
+  self.canOrder = true
+  self.actor:resetTint()
+end
 function Unit:restore()
-  -- Restore moves and reset tint.
   self.maxmoves = self:getmoves()
   self.movesleft = self.maxmoves
-  self.actor:resetTint()
+  self:unwait()
   --you could burn fuel here for aircraft (or wait until your next turn like AW to allow 0-fuel autosupplies and block/counter).
 end
-function Unit:canOrder()
+function Unit:canMove()
   return self.movesleft > 0
 end
 function Unit:board(transport)

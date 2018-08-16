@@ -96,7 +96,7 @@ function u.World:selectNext()
     local unit = map:getUnit(curpos)
     local prop = map:getTerrain(curpos)
     -- Select unit first, then any deployment property beneath.
-    if unit and unit.movesleft > 0 then  -- Make sure the unit can still move!
+    if unit and unit.canOrder then  -- Make sure the unit can still move!
       pri.selectunit(unit)
     elseif prop.UNITS_DEPLOYABLE and prop.team == player and (not map:getUnit(curpos)) then
       pri.selectproperty(prop)
@@ -264,12 +264,13 @@ function pri.cancelunload()
   -- This rolls back one step as you'd expect. Maybe not very elegant though.
   local transport = map:getUnit(selunit.pos)
   
+  -- Roll back transport's whole Move-Unload...
   local unload = history[historyposition]
   unload:undo()
   historyposition = historyposition - 1
   
-  pri.deselect()
-  pri.selectunit(transport)  -- Select
+  pri.deselect()  -- Deselect cargo
+  pri.selectunit(transport)  -- Select transport
   pri.moveunit(unload.moveCommand.dest)  -- Move
   actionfuncs.Unload()  -- Unload menu
 end
@@ -309,8 +310,8 @@ function pri.evaluateActions()
     -- Unload:
     if selunit.BOARDABLE and (#selunit.boardedunits > 0) then
       for k,unit in pairs(selunit.boardedunits) do
-        if unit:canOrder() and map:getCost(unit, selunit.pos) then
-          -- If the unit has moves remaining, and can disembark where it is...
+        if unit:canMove() and map:getCost(unit, selunit.pos) then
+          -- If the unit can move, and can disembark where it is...
           actionmenu:showaction(g.ACTS.UNLOAD)
           --however, you only want to add the action ONCE, or it will create new actionmenu entries.
           --also, you should have, as an "else", show the button but disabled. maybe disabled buttons give hints when tapped. "units have no moves!"
@@ -337,9 +338,9 @@ function pri.evaluateActions()
       actionmenu:showaction(g.ACTS.JOIN)
     end
     -- Hold:
-    -- For now, only transports can Hold. canOrder() means you can't Hold if it'd leave you with no moves left (that'd be Wait). More like "couldOrder()".
-    -- This is actually relevant for all units, but only really for Supply and Join optimisation, so i think it's just confusing and could cause bad play.
-    if selunit.BOARDABLE and selunit:canOrder() then
+    -- For now, only transports can Hold. canMove means you can't Hold if it'd leave you with no moves left (that'd be Wait). More like "couldMove".
+    -- This is actually relevant for all units, but only really for Supply and Join optimisation, so I think it's just confusing and could cause bad play.
+    if selunit.BOARDABLE and selunit:canMove() then
       actionmenu:showaction(g.ACTS.HOLD)
     end
     
@@ -391,10 +392,6 @@ function actionfuncs.Unload()
   actionmenu:clear()  --eventually hide().
   
   unloadmenu:show(selunit)
-  ----bugs:
-  --wait after unload (wait:undo()) does not remember how many movesleft the infantry had; restores it to max with restore().
-  --  that could happen if you demoved after an unload-move (it doesn't tho bc the map remembers the range). restore and snapback set to maxmoves.
-  --  well the MoveCommand can store that, so just feed it back in...
 end
 function u.World:dispatchUnload(cargo)
   local actionCommand = com.UnloadCommand(selunit, cargo)

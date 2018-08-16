@@ -44,7 +44,7 @@ function blockWhile(func, ...)
   end
 end
 function loop(delta)
-  -- Don't know what will actually end up here yet. You have the timedelta there if you want to play with it. Though anim should be abstracted.
+  --should probably be checking this queue constantly until blockWhile...or is that even possible? must be blockWhile would have to signal that?
   if next(queueList) ~= nil then
     local functable = table.remove(queueList, 1)
     local func = table.remove(functable, 1)

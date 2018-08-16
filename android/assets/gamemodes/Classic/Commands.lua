@@ -41,7 +41,7 @@ function u.WaitCommand:execute()
   self.unit:wait()
 end
 function u.WaitCommand:undo()
-  self.unit:restore()
+  self.unit:unwait()
 end
 
 u.AttackCommand = class(Command)
