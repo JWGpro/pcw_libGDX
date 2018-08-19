@@ -268,17 +268,18 @@ function pri.deaction()
 end
 
 function pri.cancelunload()
-  -- This rolls back one step as you'd expect. Maybe not very elegant though.
+  -- This rolls back one step as you'd expect. It's even less elegant than the last way somehow.
   local transport = map:getUnit(selunit.pos)
   
-  -- Roll back transport's whole Move-Unload...
+  -- Undo the Unload and remove it from history...
   local unload = history[historyposition]
-  unload:undo()
+  unload.actionCommand:undo()
   historyposition = historyposition - 1
   
   pri.deselect()  -- Deselect cargo
-  pri.selectunit(transport)  -- Select transport
-  pri.moveunit(unload.moveCommand.dest)  -- Move
+  selunit = transport  -- Select transport (sorta - the only persistent part - same with below statements.)
+  moveCommand = unload.moveCommand
+  indirectallowed = (selunit.pos:equals(moveCommand.startpos))
   actionfuncs.Unload()  -- Unload menu
 end
 
