@@ -62,28 +62,46 @@ function Unit:takeDamage(x)
   end
 end
 function Unit:die()
-  --what if you die from a counterattack? shouldn't it be startXY?
-  --UMM LOL
-  --two possibilities: attacker moved and killed its own ref, and has no ref if it dies. but this call will kill ref at its destination. that's ok...
-  --or: defender did not move and needs to kill its own ref.
+  table.remove(teamunits[self.team], self.unitnumber)
   if not self.isBoarded then
     map:killUnitRef(self)
-    self.actor:remove()
+    self.actor:hide()
   end
-  table.remove(teamunits[self.team], self.unitnumber)
+  if self.BOARDABLE then
+    -- Kill everything on board when dying.
+    for i,unit in ipairs(self.boardedunits) do
+      unit:die()
+    end
+  end
   --play an anim
-  --Lua should GC if no references, so when the World lets go of its target.
   --by the way, Actors shouldn't have their own Sprites because you should be using an AssetManager. so no need to dispose.
-  
-  --can't ever GC units because they are stored in the replay.
+end
+function Unit:undie()
+  table.insert(teamunits[self.team], self.unitnumber, self)
+  if not self.isBoarded then
+    map:storeUnitRef(self)
+    self.actor:unhide()
+  end
+  if self.BOARDABLE then
+    for i,unit in ipairs(self.boardedunits) do
+      unit:undie()
+    end
+  end
 end
 function Unit:heal(x)
-  --if you're dead, then live again! (due to a replay rewind)
   local newhp = self.hp + x
   if newhp > self.MAXHP then
     self.hp = self.MAXHP
   else
     self.hp = newhp
+  end
+end
+function Unit:setHp(x)
+  -- Intended to be used with, for example, HPs stored in Commands.
+  local dead = self.hp <= 0
+  self.hp = x
+  if dead and self.hp > 0 then
+    self:undie()
   end
 end
 function Unit:getFuel()
@@ -134,22 +152,24 @@ function Unit:board(transport)
   self.isBoarded = true
   
   self.actor:hide()
-  table.insert(transport.boardedunits, self)
-  self.boardnumber = #transport.boardedunits
   --inf appears behind APC when it should be on top. don't really give a fock right now but still. selunit should be always on top.
   -- cackhanded way of doing that would be to hide()show() upon selection.
   --boarding animation(lightshafts)/noise, show boarded icon on APC
+end
+function Unit:getCargoNumber(argunit)
+  for i,unit in ipairs(self.boardedunits) do
+    if unit == argunit then
+      return i
+    end
+  end
+  return nil
 end
 function Unit:disembark(transport)
   self.pos = transport.pos
   self.isBoarded = false
   self:placeActor(self.pos)
   
-  self.actor:show()
-  table.remove(transport.boardedunits, self.boardnumber)  --here's a bug for u. inf1 boards and inf2 boards. inf1 leaves. inf2 is now in 1.
-  --so u need to rethink this system and rename the entry u use to check for boarded units while ur at it.
-  --same is true of die(), or any table.remove().
-  self.boardnumber = nil
+  self.actor:unhide()
 end
 function Unit:getmoves()
   if self.fuel > self.MOVERANGE then
@@ -232,7 +252,7 @@ function Unit:simulateBattle(target, wepindex)
   if targethp > 0 then
     local counterweps = target:validweps(target.pos, self, false)
     if #counterweps > 0 then
-      defenderDamage = g.damageCalc(target.CLASS, targethp, 1, self.CLASS, self.hp, map:getDefence(self.pos))
+      defenderDamage = g.damageCalc(target.CLASS, targethp, counterweps[1], self.CLASS, self.hp, map:getDefence(self.pos))
     end
   end
   
@@ -246,12 +266,13 @@ function Unit:battle(target, wepindex)
   if targetIsAlive then
     local counterweps = target:validweps(target.pos, self, false)
     if #counterweps > 0 then
-      target:attack(self, 1)
+      target:attack(self, counterweps[1])
     end
   end
   
 end
 function Unit:validweps(position, target, indirectallowed)
+  -- Returns a list of weapon indexes, not the weapons themselves. The weapons would be found with unit.weps[i].
   local weplist = {}
   local dist = position:mandist(target.pos)
   
@@ -355,7 +376,8 @@ statics = {
   MAXHP = 100,
   MAXFUEL = 99,
   ARMOUR = g.ARMOURS.VEST,
-  WEPS = {[1] = wep.Rifle, [2] = wep.Missile}
+--  WEPS = {[1] = wep.Rifle, [2] = wep.Missile}
+  WEPS = {[1] = wep.Rifle}
   --CAPTURESTRENGTH = 1.0
 }
 g.addPairs(u.Infantry, statics)
@@ -393,17 +415,6 @@ function u.APC:init(x, y, teamID)
   
   Unit.init(self, x, y, teamID)
 end
-function u.APC:die()
-  -- Kill everything on board before dying.
-  --But...references? See what's changed in board()...
-  for k,unit in pairs(self.boardedunits) do
-    unit:die()
-  end
-  Unit.die(self)
-end
---override u.APC:wait() to modify everything inside.
---you need to do this for each boardable - maybe you can do it programmatically. "if self.BOARDABLE then waitall" in wait() i guess.
---well no because of grid refs and shit. ughhhhhhhhhhh.
 
 statics = nil
 

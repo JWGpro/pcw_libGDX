@@ -31,9 +31,6 @@ end
 -- Everything below is action commands.
 
 u.WaitCommand = class(Command)
--- The wait command might seem unnecessary, and appended to all action commands - but at least Board must not wait() the unit.
--- For now, the implementation here (wait and restore) is copypasted to every command that needs it, instead of storing another WaitCommand.
--- That might prove shortsighted.
 function u.WaitCommand:init(unit)
   self.NAME = "Wait"
   self.unit = unit
@@ -51,19 +48,26 @@ function u.AttackCommand:init(unit, wepindex, target)
   self.NAME = "Attack"
   self.unit = unit
   self.unitHp = unit.hp
-  self.wepindex = wepindex
+  self.unitWI = wepindex
   self.target = target
   self.targetHp = target.hp
+  self.targetwep = target.weps[g.tryKeys(target:validweps(target.pos, unit, false), {1})]  -- Gets the first valid wep (not index) from target.
+  self.twepammo = self.targetwep.ammo
   self:execute()
 end
 function u.AttackCommand:execute()
-  self.unit:battle(self.target, self.wepindex)
-  self.unit:wait()  --u can only do this if selunit is still alive!!...i think?? oh...no. the unit still has a reference.
+  self.unit:battle(self.target, self.unitWI)
+  self.unit:wait()
 end
 function u.AttackCommand:undo()
-  --restore lost ammo (for both)
-  --restore lost hp (for both)
-  self.unit:restore()
+  self.unit.weps[self.unitWI]:addammo(1)
+  -- We know that unit fired, but how do you know if target fired? Have to check nil here, because you can't do "nil < nil".
+  if (self.twepammo ~= nil) and (self.targetwep.ammo < self.twepammo) then
+    self.targetwep:addammo(1)
+  end
+  self.unit:setHp(self.unitHp)
+  self.target:setHp(self.targetHp)
+  self.unit:unwait()
 end
 
 u.CaptureCommand = class(Command)
@@ -80,7 +84,7 @@ function u.CaptureCommand:execute()
 end
 function u.CaptureCommand:undo()
   self.property:setCap(self.propertyCap)
-  self.unit:restore()
+  self.unit:unwait()
 end
 
 u.SupplyCommand = class(Command)
@@ -99,7 +103,7 @@ function u.SupplyCommand:execute()
 end
 function u.SupplyCommand:undo()
   --for each target setSupply(supplies)
-  self.unit:restore()
+  self.unit:unwait()
 end
 
 u.BuildCommand = class(Command)
@@ -144,9 +148,11 @@ end
 function u.BoardCommand:execute()
   -- This is one case where the acting unit does not wait afterwards; it can be transported, unloaded and moved again.
   self.cargo:board(self.transport)
+  table.insert(self.transport.boardedunits, self.cargo)  -- Will always go to the end.
 end
 function u.BoardCommand:undo()
   self.cargo:disembark(self.transport)
+  table.remove(self.transport.boardedunits)  -- Since the new cargo will always be at the end.
 end
 
 u.UnloadCommand = class(Command)
@@ -154,19 +160,18 @@ function u.UnloadCommand:init(transport, cargo)
   self.NAME = "Unload"
   self.transport = transport
   self.cargo = cargo
+  self.boardnumber = transport:getCargoNumber(cargo)  -- Remembers where the cargo was loaded in case of undo.
   self:execute()
 end
 function u.UnloadCommand:execute()
   -- Unloads the cargo. The caller of this command (i.e. World) will then select the cargo.
   self.cargo:disembark(self.transport)
-  -- No wait afterwards; free to move.
+  table.remove(self.transport.boardedunits, self.boardnumber)
 end
 function u.UnloadCommand:undo()
-  -- Puts the cargo back in the transport.
-  --this is probs gonna change the order of the units in the transport (putting it to the back due to replay), but oh wel.
-  --same with the BoardCommand which is just the reverse.
+  -- Puts the cargo back in the transport (where it used to be).
   self.cargo:board(self.transport)
-  self.transport:restore() --
+  table.insert(self.transport.boardedunits, self.boardnumber, self.cargo)
 end
 
 u.JoinCommand = class(Command)

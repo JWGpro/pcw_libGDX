@@ -110,9 +110,9 @@ function u.Map:displayRanges(selunit)
           cell:setTile(TILES.mdestinationcells)
           rangetables.mdestinationcells[vec] = cell
         -- 2: Cell is occupied by a boardable unit. (Allied boardables don't count because they remove control.)
-        elseif g.hasKeys(destination.unit, {"BOARDABLE", selunit.NAME})
+        elseif g.tryKeys(destination.unit, {"BOARDABLE", selunit.NAME})
         and (destination.unit.team == selunit.team)
-        and (#destination.unit.boardedunits <= destination.unit.BOARDCAP) then  --DONT FORGET # DOESNT WORK IF INDEXING IS WEIRD
+        and (#destination.unit.boardedunits <= destination.unit.BOARDCAP) then
           -- Set a boardable range tile, store for later retrieval and clearance.
           cell:setTile(TILES.mboardablecells) --need it the same for now because of logiccc.
           rangetables.mboardablecells[vec] = cell

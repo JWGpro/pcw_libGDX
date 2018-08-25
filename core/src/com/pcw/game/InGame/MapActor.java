@@ -64,7 +64,7 @@ public class MapActor extends Actor {
         this.remove();
     }
 
-    public void show() {
+    public void unhide() {
         // Ends up on top of everything where it wasn't before, but that shouldn't be a problem.
         parentStage.addActor(this);
     }

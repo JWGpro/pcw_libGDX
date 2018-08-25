@@ -316,8 +316,8 @@ function pri.evaluateActions()
       actionmenu:showaction(g.ACTS.ATTACK)
     end
     -- Unload:
-    if selunit.BOARDABLE and (#selunit.boardedunits > 0) then
-      for k,unit in pairs(selunit.boardedunits) do
+    if selunit.BOARDABLE and (selunit.hasCargo()) then
+      for i,unit in ipairs(selunit.boardedunits) do
         if unit:canMove() and map:getCost(unit, selunit.pos) then
           -- If the unit can move, and can disembark where it is...
           actionmenu:showaction(g.ACTS.UNLOAD)

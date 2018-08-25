@@ -60,20 +60,20 @@ function g.set(list)  --maybe this should be called "search".
   return set
 end
 
-function g.hasKeys(table, args)
-  -- Checks if a sequence of keys can be found from a given table.
+function g.tryKeys(table, args)
+  -- Tries a sequence of keys on a given table. For example, table[unit][1].
   -- Prevents you from needing to check nil on each key.
-  -- Returns true if all keys exist, false if not. Could also make it return the index of the first nil key.
+  -- Returns the final value if all keys exist, nil if not. Could also make it return/print the index of the first nil key.
   
   -- You have to pass a valid table as the first argument.
   local check = table
   for i,v in ipairs(args) do
     if check[v] == nil then
-      return false
+      return nil
     end
     check = check[v]
   end
-  return true
+  return check
 end
 
 function g.addPairs(table, keypairs)
