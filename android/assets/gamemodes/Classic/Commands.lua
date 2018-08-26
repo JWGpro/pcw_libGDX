@@ -248,15 +248,18 @@ function u.TurnEnd:init(world, units)
   self.world = world
   self.units = units
   self.states = {}
-  -- Storing unit states for undo.
-  for i,unit in ipairs(self.units) do
-    self.states[i] = {unit.movesleft, unit.canOrder}
+  -- Storing (living) unit states for undo.
+  for k,unit in ipairs(self.units) do
+    if not unit:isDead() then
+      self.states[k] = {unit.movesleft, unit.canOrder}
+    end
   end
   self:execute()
 end
 function u.TurnEnd:execute()
   -- Restore the units of the current player.
-  for i,unit in ipairs(self.units) do
+  for k,_ in pairs(self.states) do
+    local unit = self.units[k]
     unit:restore()
   end
   -- Cycle control.
@@ -266,11 +269,12 @@ function u.TurnEnd:undo()
   -- Give back control.
   self.world:cyclePlayer(-1)
   -- Reset the states of the units.
-  for i,unit in ipairs(self.units) do
+  for k,vals in pairs(self.states) do
+    local unit = self.units[k]
     -- movesleft.
-    unit.movesleft = self.states[i][1]
-    if not self.states[i][2] then
-      -- waited state.
+    unit.movesleft = vals[1]
+    if not vals[2] then
+      -- wait() the unit again, if it was waited at the turn's end.
       unit:wait()
     end
   end

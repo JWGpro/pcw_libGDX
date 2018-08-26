@@ -26,9 +26,8 @@ function Unit:init(x, y, teamID)
   
   -- Store the unit reference for direct lookup in a 2D array of the grid.
   map:storeUnitRef(self)
-  -- Store the unit reference again in a separate list for more direct iteration (required for restoring units each turn).
+  -- Store the unit reference again, permanently, in a list for iteration (required for restoring units each turn).
   table.insert(teamunits[teamID], self)
-  self.unitnumber = #teamunits[teamID]
   
   -- Initialise weapons.
   self.weps = {}
@@ -55,6 +54,9 @@ end
 function Unit:isWounded()
   return self.hp ~= self.MAXHP
 end
+function Unit:isDead()
+  return self.hp <= 0
+end
 function Unit:takeDamage(x)
   self.hp = self.hp - x
   if self.hp <= 0 then
@@ -62,7 +64,6 @@ function Unit:takeDamage(x)
   end
 end
 function Unit:die()
-  table.remove(teamunits[self.team], self.unitnumber)
   if not self.isBoarded then
     map:killUnitRef(self)
     self.actor:hide()
@@ -77,7 +78,6 @@ function Unit:die()
   --by the way, Actors shouldn't have their own Sprites because you should be using an AssetManager. so no need to dispose.
 end
 function Unit:undie()
-  table.insert(teamunits[self.team], self.unitnumber, self)
   if not self.isBoarded then
     map:storeUnitRef(self)
     self.actor:unhide()
@@ -98,7 +98,7 @@ function Unit:heal(x)
 end
 function Unit:setHp(x)
   -- Intended to be used with, for example, HPs stored in Commands.
-  local dead = self.hp <= 0
+  local dead = self:isDead()
   self.hp = x
   if dead and self.hp > 0 then
     self:undie()
