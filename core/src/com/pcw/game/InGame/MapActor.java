@@ -24,8 +24,8 @@ public class MapActor extends Actor {
     private Stage parentStage;
     // Possibly other stuff like tints (for teams), rotation, mirrored etc.
 
-    public MapActor(String spritedir, Float alphaval) {
-        sprite = new Sprite(new Texture(Gdx.files.external(spritedir)));
+    public MapActor(Texture tex, Float alphaval) {
+        sprite = new Sprite(tex);
         alpha = alphaval;
 
         // Bounds don't do anything right now, so they're disabled.
@@ -75,9 +75,8 @@ public class MapActor extends Actor {
         return sprite.getTexture().toString();
     }
 
-    public void setSprite(String spritedir) {
-        sprite.getTexture().dispose();
-        sprite.setTexture(new Texture(Gdx.files.external(spritedir)));
+    public void setSprite(Texture newtex) {
+        sprite.setTexture(newtex);
     }
 
     public Float getAlpha() {

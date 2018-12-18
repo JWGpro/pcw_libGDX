@@ -1,4 +1,5 @@
 require "class"
+local assets = require "Assets"
 local g = require "Globals"
 local cur = require "Cursor"
 local com = require "Commands"
@@ -43,9 +44,7 @@ end
 
 u.World = class()
 function u.World:init(gameScreen, gameCamera, tiledMap, externalDir, uiStage)
-  local skin = gameScreen:newSkin(externalDir .. "PCW/menuskins/Glassy/glassy-ui.json")
-  --u need to dispose of this Skin.
-  --highly recommend you investigate the AssetManager.
+  local skin = gameScreen:getAsset(assets.Skin.DEFAULT)
   
   map = m.Map(30, 20, gameScreen, teamunits)  --load a map here. either in init() or call loadMap().
   map:loadMap(externalDir .. "PCW/maps/test_tbl.map")

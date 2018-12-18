@@ -1,4 +1,5 @@
 require "class"
+local assets = require "Assets"
 local g = require "Globals"
 local cur = require "Cursor"
 local com = require "Commands"
@@ -39,12 +40,7 @@ u.World = class()
 function u.World:init(gameScreen, gameCamera, tiledMap, externalDir, uiStage)
   extdir = externalDir
   
-  local fh = gameScreen:reflect("com.badlogic.gdx.files.FileHandle",
-    {"String"}, {externalDir .. "PCW/menuskins/Glassy/glassy-ui.json"})
-  local skin = gameScreen:reflect("com.badlogic.gdx.scenes.scene2d.ui.Skin",
-    {"FileHandle"}, {fh})
-  --u need to dispose of this Skin.
-  --highly recommend you investigate the AssetManager.
+  local skin = gameScreen:getAsset(assets.Skin.DEFAULT)
   
   map = m.Map(30, 20, gameScreen, teamunits)
   tileui = tui.TileSelectUI(gameScreen, skin, externalDir, uiStage, map:getTerrainSet())

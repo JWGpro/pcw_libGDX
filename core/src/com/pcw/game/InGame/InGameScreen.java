@@ -1,13 +1,14 @@
 package com.pcw.game.InGame;
 
 import com.badlogic.gdx.*;
+import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.assets.loaders.resolvers.ExternalFileHandleResolver;
+import com.badlogic.gdx.audio.Music;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.files.FileHandle;
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.ParticleEffect;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.input.GestureDetector;
@@ -30,6 +31,8 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.pcw.game.PCW;
 import com.pcw.game.Scripting.ScriptManager;
 
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
 
@@ -41,6 +44,7 @@ public class InGameScreen implements Screen, InputProcessor, GestureListener {
     private boolean menuRaised = false;
     private String parentMode;
     private String childMode;
+    private AssetManager assetManager;
     private InputMultiplexer im;
     private Game game;
     private OrthographicCamera gameCamera;
@@ -54,6 +58,10 @@ public class InGameScreen implements Screen, InputProcessor, GestureListener {
         game = thegame;
         parentMode = parentmode;
         childMode = childmode;
+
+        // Loading assets...
+        assetManager = new AssetManager(new ExternalFileHandleResolver());
+        // Since the script can use whatever assets it wants, it must declare and load them itself.
 
         // Camera setup.
         float w = Gdx.graphics.getWidth();
@@ -144,7 +152,8 @@ public class InGameScreen implements Screen, InputProcessor, GestureListener {
     }
 
     public MapActor addLuaActor(String spritedir, Float alphaval){
-        MapActor luaActor = new MapActor(spritedir, alphaval);
+        Texture tex = assetManager.get(spritedir);
+        MapActor luaActor = new MapActor(tex, alphaval);
         gameStage.addActor(luaActor);
         return luaActor;
     }
@@ -152,10 +161,6 @@ public class InGameScreen implements Screen, InputProcessor, GestureListener {
     public void catchCursor(boolean bool){
         // Locks and hides the cursor.
         Gdx.input.setCursorCatched(bool);
-    }
-
-    public Skin newSkin(String path) {
-        return new Skin(new FileHandle(path));
     }
 
     public Object reflect(String classname, Object[] luaparams, Object[] args){
@@ -241,6 +246,41 @@ public class InGameScreen implements Screen, InputProcessor, GestureListener {
         }
     }
 
+    public void queueLoadAsset(String path, String classname) {
+        // can use params too, e.g. for texture filtering...
+        // i don't expect it to end up looking like this in final. though i also don't expect to use reflection.
+
+        if (classname.equals("Texture")) {
+            assetManager.load(path, Texture.class);
+        } else if (classname.equals("Skin")) {
+            assetManager.load(path, Skin.class);
+        } else if (classname.equals("TextureAtlas")) {
+            assetManager.load(path, TextureAtlas.class);
+        } else if (classname.equals("Music")) {
+            assetManager.load(path, Music.class);
+        } else if (classname.equals("Sound")) {
+            assetManager.load(path, Sound.class);
+        } else if (classname.equals("ParticleEffect")) {
+            assetManager.load(path, ParticleEffect.class);
+        } else if (classname.equals("Pixmap")) {
+            assetManager.load(path, Pixmap.class);
+        } else if (classname.equals("BitmapFont")) {
+            assetManager.load(path, BitmapFont.class);
+        } else {
+            System.out.println("ERROR: didn't recognise the class name '" + classname + "' for file " + path);
+        }
+
+        System.out.println("Loaded " + classname + ": " + path);
+    }
+
+    public void finishLoadingAssets() {
+        assetManager.finishLoading();
+    }
+
+    public Object getAsset(String path){
+        return assetManager.get(path);
+    }
+
     @Override
     public void show() {
 
@@ -295,6 +335,7 @@ public class InGameScreen implements Screen, InputProcessor, GestureListener {
         // make sure you dispose() or something when you quit out...see Menu class.
         gameStage.dispose();
         UIStage.dispose();
+        assetManager.dispose();
         tiledMap.dispose();
         scriptmanager.dispose();
         // Does the stage get rid of all the actors inside it?

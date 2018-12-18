@@ -1,4 +1,5 @@
 require "class"
+local assets = require "Assets"
 local g = require "Globals"
 
 local java
@@ -75,7 +76,6 @@ function Unit:die()
     end
   end
   --play an anim
-  --by the way, Actors shouldn't have their own Sprites because you should be using an AssetManager. so no need to dispose.
 end
 function Unit:undie()
   if not self.isBoarded then
@@ -382,9 +382,9 @@ statics = {
 }
 g.addPairs(u.Infantry, statics)
 function u.Infantry:init(x, y, teamID)
-  self.sprite = "PCW/unitAssets/Default/inf_red_1.png"
+  self.sprite = assets.Texture.INF_RED_1
   if teamID == g.TEAMS.BLUE then
-    self.sprite = "PCW/unitAssets/Default/inf_blue_1.png"
+    self.sprite = assets.Texture.INF_BLUE_1
   end
   
   Unit.init(self, x, y, teamID)
@@ -410,7 +410,7 @@ g.addPairs(u.APC, statics)
 function u.APC:init(x, y, teamID)
   --Ideally you will use ipairs on this array.
   self.boardedunits = {}
-  self.sprite = "PCW/unitAssets/Default/apc_red.png"
+  self.sprite = assets.Texture.APC_RED
   self.class = u.APC
   
   Unit.init(self, x, y, teamID)

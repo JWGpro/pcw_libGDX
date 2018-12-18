@@ -14,6 +14,14 @@ local lastX local lastY
 function init(childmode, gameScreen, gameCamera, gameStage, uiCamera, uiStage, tiledMap, externalDir, inputKeys, inputButtons)
   -- Initialise everything here to prevent any possibility of hanging later!
   package.path =  externalDir .. modepath .. "/?.lua;" .. package.path
+  -- Loading assets...
+  local assets = require("Assets")
+  for class,table in pairs(assets) do
+    for _,file in pairs(table) do
+      gameScreen:queueLoadAsset(file, class)
+    end
+  end
+  gameScreen:finishLoadingAssets()
   -- Loads the appropriate World and InputMap for the child mode (Play/MapEditor/ReplayViewer).
   local w = require(childmode .. "/World")
   local im = require(childmode .. "/InputMap")
