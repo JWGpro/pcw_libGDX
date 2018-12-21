@@ -19,7 +19,8 @@ end
 
 local Unit = class()
 function Unit:init(x, y, teamID)
-  self.actor = java:addLuaActor(self.sprite, 1.0)
+  self.actor = java:newActor()
+  self.actor:setImage(self.sprite)
   -- Store the coordinates. These are grabbed by functions in Map and World.
   self.pos = Vector2(x, y)
   -- Place the unit.
@@ -382,9 +383,9 @@ statics = {
 }
 g.addPairs(u.Infantry, statics)
 function u.Infantry:init(x, y, teamID)
-  self.sprite = assets.Texture.INF_RED_1
+  self.sprite = java:getAsset(assets.Texture.INF_RED_1)
   if teamID == g.TEAMS.BLUE then
-    self.sprite = assets.Texture.INF_BLUE_1
+    self.sprite = java:getAsset(assets.Texture.INF_BLUE_1)
   end
   
   Unit.init(self, x, y, teamID)
@@ -410,7 +411,7 @@ g.addPairs(u.APC, statics)
 function u.APC:init(x, y, teamID)
   --Ideally you will use ipairs on this array.
   self.boardedunits = {}
-  self.sprite = assets.Texture.APC_RED
+  self.sprite = java:getAsset(assets.Texture.APC_RED)
   self.class = u.APC
   
   Unit.init(self, x, y, teamID)

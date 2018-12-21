@@ -7,10 +7,7 @@ import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.*;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.ParticleEffect;
-import com.badlogic.gdx.graphics.g2d.TextureAtlas;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.g2d.*;
 import com.badlogic.gdx.input.GestureDetector;
 import com.badlogic.gdx.input.GestureDetector.GestureListener;
 import com.badlogic.gdx.maps.MapLayers;
@@ -151,11 +148,15 @@ public class InGameScreen implements Screen, InputProcessor, GestureListener {
         return new TiledMapTileLayer.Cell();
     }
 
-    public MapActor addLuaActor(String spritedir, Float alphaval){
-        Texture tex = assetManager.get(spritedir);
-        MapActor luaActor = new MapActor(tex, alphaval);
+    public MapActor newActor(){
+        MapActor luaActor = new MapActor();
         gameStage.addActor(luaActor);
         return luaActor;
+    }
+
+    public Object getAnimationPlayModes() {
+        // unsure of a more elegant way of doing this.
+        return Animation.PlayMode.class;
     }
 
     public void catchCursor(boolean bool){
@@ -270,7 +271,7 @@ public class InGameScreen implements Screen, InputProcessor, GestureListener {
             System.out.println("ERROR: didn't recognise the class name '" + classname + "' for file " + path);
         }
 
-        System.out.println("Loaded " + classname + ": " + path);
+        System.out.println("Queued " + classname + ": " + path);
     }
 
     public void finishLoadingAssets() {
@@ -278,6 +279,7 @@ public class InGameScreen implements Screen, InputProcessor, GestureListener {
     }
 
     public Object getAsset(String path){
+        // This is the preferred way for script to manipulate and play Sound assets, since it gives full control.
         return assetManager.get(path);
     }
 

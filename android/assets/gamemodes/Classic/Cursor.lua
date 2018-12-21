@@ -6,8 +6,9 @@ local u = {}
 
 u.Cursor = class()
 function u.Cursor:init(java)
-  self.sprite = assets.Texture.CURSOR
-  self.actor = java:addLuaActor(self.sprite, 1.0)
+  self.actor = java:newActor()
+  local playmodes = java:getAnimationPlayModes()
+  self.actor:animate(java:getAsset(assets.TextureAtlas.ANIMS), "cursoridle", 0.5, playmodes.LOOP)
   self.actor:setPosition(0, 0)
 end
 

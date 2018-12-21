@@ -4,8 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.Batch;
-import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.graphics.g2d.*;
 import com.badlogic.gdx.scenes.scene2d.*;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.scenes.scene2d.actions.ColorAction;
@@ -18,25 +17,71 @@ import org.luaj.vm2.lib.jse.JsePlatform;
 
 public class MapActor extends Actor {
 
-    private Sprite sprite;
-    private Float alpha;
+    private float alpha = 1.0f;
     private static final Color DEFAULT_COLOUR = new Color(0xffffffff);
     private Stage parentStage;
     // Possibly other stuff like tints (for teams), rotation, mirrored etc.
 
-    public MapActor(Texture tex, Float alphaval) {
-        sprite = new Sprite(tex);
-        alpha = alphaval;
+    private boolean isAnimated = false;
+    private Animation<TextureRegion> anim;
+    private TextureAtlas atlas;
+    private TextureRegion region;
+    private String animname;
+    private float frametime;
+    private Animation.PlayMode playmode;
+    private float stateTime = 0f;
 
-        // Bounds don't do anything right now, so they're disabled.
-        // Lua actors should be referred to by Lua objects, not MapActors.
-        // Could probably do it by reflecting Touchable.enabled if you really wanted to anyway.
-//        // The bounds could either be the size of the sprite (could overlap/exceed cell), or the cell size of the map.
-//        setBounds(this.getX(), this.getY(), bound, bound);
-//        setTouchable(Touchable.enabled);
+    // This actor can switch between animated and not, once constructed.
+
+    // The Animation class does not seem to be capable of variable frame times out-of-box. I could implement it later.
+
+    public MapActor() {}
+
+    public void setImage(Texture newtex) {
+        isAnimated = false;
+        region = new TextureRegion(newtex);
+    }
+
+    public void animate(TextureAtlas ta, String an, float ft, Animation.PlayMode pm) {
+        // Could be considered the constructor for an animated actor.
+        atlas = ta;
+        animname = an;
+        frametime = ft;
+        playmode = pm;
+
+        setAnim(animname);
+    }
+
+    public String getAnimName(){
+        return animname;
+    }
+
+    public void setAnim (String newanim) {
+        isAnimated = true;
+        animname = newanim;
+        anim = new Animation<TextureRegion>(frametime, atlas.findRegions(animname), playmode);
+    }
+
+    public Animation.PlayMode getPlayMode(){
+        return anim.getPlayMode();
+    }
+
+    public void setPlayMode(Animation.PlayMode pm) {
+        playmode = pm;
+        anim.setPlayMode(playmode);
+    }
+
+    public float getFrameTime() {
+        return frametime;
+    }
+
+    public void setFrameTime (float ft) {
+        frametime = ft;
+        anim.setFrameDuration(frametime);
     }
 
     public void tint(int rgba8888) {
+        // why have i done this instead of this.setColor()?
         ColorAction ca = new ColorAction();
         ca.setEndColor(new Color(rgba8888));
         this.addAction(ca);
@@ -69,21 +114,11 @@ public class MapActor extends Actor {
         parentStage.addActor(this);
     }
 
-    public String getSprite() {
-        // Returns some memory address instead of the filename at the moment.
-        // Could store the filename passed in from the constructor, or there may be a way of actually retrieving it.
-        return sprite.getTexture().toString();
-    }
-
-    public void setSprite(Texture newtex) {
-        sprite.setTexture(newtex);
-    }
-
-    public Float getAlpha() {
+    public float getAlpha() {
         return alpha;
     }
 
-    public void setAlpha(Float alphaval) {
+    public void setAlpha(float alphaval) {
         alpha = alphaval;
     }
 
@@ -91,17 +126,21 @@ public class MapActor extends Actor {
     public void draw(Batch batch, float parentAlpha) {
         Color color = getColor();
         batch.setColor(color.r, color.g, color.b, (color.a * parentAlpha * alpha));
-        batch.draw(sprite, this.getX(), this.getY());
+
+        if (isAnimated) {
+            region = anim.getKeyFrame(stateTime);
+        }
+        batch.draw(region, this.getX(), this.getY());
     }
 
     @Override
     public void act(float delta) {
         super.act(delta);
+        stateTime += delta;
     }
 
     @Override
     protected void positionChanged() {
-        sprite.setPosition(this.getX(), this.getY());
         super.positionChanged();
     }
 }
