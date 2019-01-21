@@ -73,7 +73,8 @@ end
 
 function u.World:updateCursor(x, y)
   -- Updates the cursor position.
-  --doesn't work with resizing.
+  --works with: panning, zooming.
+  --doesn't work with: resizing.
   local newX = map:snap(cam.position.x - ((offX - x) * cam.zoom))
   local newY = map:snap(cam.position.y - ((y - offY) * cam.zoom))
   cursor.actor:setPosition(newX, newY)

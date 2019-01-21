@@ -44,4 +44,21 @@ function u.fire(vector)
     end)
 end
 
+function u.damage(vector)
+  u.sfx_damage:play()
+  
+  --very WET
+--  q:queue(function()
+--      vfx_actor2:unhide()
+--      map:placeActor(vfx_actor2, vector)
+--      vfx_actor2:animate(java:getAsset(assets.TextureAtlas.ANIMS), "damage", 0.1, playmodes.NORMAL)
+--    end)
+--  q:queueBlockWhile(function()
+--      return vfx_actor2:isPlayingAnim()
+--    end)
+--  q:queue(function()
+--      vfx_actor2:hide()
+--    end)
+end
+
 return u

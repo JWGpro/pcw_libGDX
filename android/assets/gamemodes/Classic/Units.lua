@@ -66,6 +66,9 @@ function Unit:takeDamage(x)
   self.hp = self.hp - x
   if self.hp <= 0 then
     self:die()
+  else
+    fx.damage(self.pos)
+    self.actor:flash(0.5, 60, 0.5)
   end
 end
 function Unit:die()
@@ -249,6 +252,9 @@ function Unit:attack(target, wepindex)
   
   local weapon = self.weps[wepindex]
   weapon:fire(self.pos)
+
+  q:queueBlockFor(0.5)
+  --remember: you need to queue stuff afterwards for this to do anything.
   
   local targetIsAlive = target.hp > damage
   target:takeDamage(damage)

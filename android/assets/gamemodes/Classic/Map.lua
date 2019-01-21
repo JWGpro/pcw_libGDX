@@ -279,7 +279,7 @@ end
 
 function u.Map:placeActor(actor, vector)
   --Sets the position of a Scene2D actor, assuming the passed vector is in "short" coordinates.
-  --use for the cursor too?
+  --use for the cursor too? except that deals with long coords and the camera and shit. not really the same...
   actor:setPosition(self:long(vector.x), self:long(vector.y))
 end
 

@@ -1,17 +1,11 @@
 package com.pcw.game.InGame;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.*;
 import com.badlogic.gdx.scenes.scene2d.*;
 import com.badlogic.gdx.scenes.scene2d.actions.*;
-import com.pcw.game.Scripting.ScriptManager;
-import javafx.scene.Parent;
-import org.luaj.vm2.Globals;
-import org.luaj.vm2.LuaValue;
-import org.luaj.vm2.lib.jse.JsePlatform;
+import com.badlogic.gdx.utils.TimeUtils;
 
 public class MapActor extends Actor {
 
@@ -28,6 +22,13 @@ public class MapActor extends Actor {
     private float frametime;
     private Animation.PlayMode playmode;
     private float stateTime;
+
+    // Related to flashing.
+    private double flashEndTime;
+    private float flashSpeed;
+    private double nextFlashTime;
+    private float preFlashAlpha;
+    private float cycleAlpha;
 
     // This actor can switch between animated and not, once constructed.
 
@@ -89,6 +90,14 @@ public class MapActor extends Actor {
         return (getActions().size > 0);
     }
 
+    public void flash(float duration, float speed, float flashAlpha2) {
+        // Speed is in alpha switches per second.
+        flashEndTime = this.getSystemTime() + duration;
+        flashSpeed = speed;
+        preFlashAlpha = getAlpha();
+        cycleAlpha = flashAlpha2;
+    }
+
     public void tint(int rgba8888) {
         // why have i done this instead of this.setColor()?
         ColorAction ca = new ColorAction();
@@ -131,6 +140,21 @@ public class MapActor extends Actor {
         alpha = alphaval;
     }
 
+    public void switchAlpha(float val1, float val2) {
+        // Simplistic way of cycling between passed alpha values.
+        if (alpha == val2) {
+            alpha = val1;
+        } else {
+            alpha = val2;
+        }
+    }
+
+    private double getSystemTime() {
+        // Returns seconds.
+        //surely this method shouldn't even be here?
+        return TimeUtils.nanoTime() / 1e9;
+    }
+
     @Override
     public void draw(Batch batch, float parentAlpha) {
         Color color = getColor();
@@ -150,6 +174,24 @@ public class MapActor extends Actor {
         // Though a method call is probably slower than storing and computing it.
         // Need a benchmarking map at some point.
         stateTime += delta;
+
+        // Flashing.
+        //this feels like it should use delta or something. what's wrong with this anyway? do i really need accumulator?
+        //why is this even here if it doesn't use delta?
+        double thetime = this.getSystemTime();
+        // If still need to flash,
+        if (thetime < flashEndTime) {
+            // and we've reached the next switch,
+            if (thetime >= nextFlashTime) {
+                // then switch, unless the flash will end at that time; in which case, stop flashing.
+                nextFlashTime = thetime + 1f/flashSpeed;
+                if (nextFlashTime >= flashEndTime) {
+                    setAlpha(preFlashAlpha);
+                } else {
+                    switchAlpha(preFlashAlpha, cycleAlpha);
+                }
+            }
+        }
     }
 
     @Override
