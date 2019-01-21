@@ -15,6 +15,9 @@ local pri = {}  -- Selection functions.
 -- Constants
 local STATES = {DEFAULT = "Default", SELECTED = "Selected", MOVED = "Moved", ACTING = "Acting", MENU = "Menu", BLOCKING = "Blocking"}
 
+-- Received
+local q
+
 local map
 local actionmenu
 local deploymenu
@@ -43,10 +46,12 @@ for i,v in ipairs(players) do
 end
 
 u.World = class()
-function u.World:init(gameScreen, gameCamera, tiledMap, externalDir, uiStage)
+function u.World:init(gameScreen, gameCamera, tiledMap, externalDir, uiStage, queue)
+  q = queue
+  
   local skin = gameScreen:getAsset(assets.Skin.DEFAULT)
   
-  map = m.Map(30, 20, gameScreen, teamunits)  --load a map here. either in init() or call loadMap().
+  map = m.Map(30, 20, gameScreen, teamunits, queue)  --load a map here. either in init() or call loadMap().
   map:loadMap(externalDir .. "PCW/maps/test_tbl.map")
   
   actionmenu = amenu.ActionMenu(gameScreen, skin, uiStage, actionfuncs)
@@ -225,7 +230,7 @@ function pri.moveunit(destination)
   indirectallowed = (selunit.pos:equals(destination))
   moveCommand = com.MoveCommand(selunit, destination)
   state = STATES.BLOCKING
-  queue(function ()  -- The statements following the MoveCommand must be queued to occur after its finish.
+  q:queue(function() -- The statements following the MoveCommand must be queued to occur after its finish.
       pri.evaluateActions()
       state = STATES.MOVED
     end)

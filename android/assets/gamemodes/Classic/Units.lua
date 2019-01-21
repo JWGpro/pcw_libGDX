@@ -1,30 +1,36 @@
 require "class"
 local assets = require "Assets"
 local g = require "Globals"
+local fx = require "Effects"
 
+-- Received
 local java
 local map
 local teamunits
+local q
 
 -- This doesn't hold anything permanently. It's used to help push statics into classes, then wiped.
 local statics = {}
 
 local u = {}  -- Public.
 
-function u.init(gameScreen, theMap, teamUnits)
+function u.init(gameScreen, theMap, teamUnits, queue)
   java = gameScreen
   map = theMap
   teamunits = teamUnits
+  q = queue
+  
+  fx.init(gameScreen, theMap, queue)
 end
 
 local Unit = class()
 function Unit:init(x, y, teamID)
-  self.actor = java:newActor()
+  self.actor = java:newActor(true)
   self.actor:setImage(self.sprite)
   -- Store the coordinates. These are grabbed by functions in Map and World.
   self.pos = Vector2(x, y)
   -- Place the unit.
-  self:placeActor(self.pos)
+  map:placeActor(self.actor, self.pos)
   
   -- Store the unit reference for direct lookup in a 2D array of the grid.
   map:storeUnitRef(self)
@@ -45,9 +51,6 @@ function Unit:init(x, y, teamID)
   self.fuel = self.MAXFUEL
   self:restore()  -- Predeployed units will be movable. Deployed units should not, as DeployMenu will tell them to wait().
   self.isBoarded = false
-end
-function Unit:placeActor(vector)
-  self.actor:setPosition(map:long(vector.x), map:long(vector.y))
 end
 function Unit:getStrength()
   -- Round up HP to ints from 1-10 for display or strength calculations (attack/capture...).
@@ -168,7 +171,7 @@ end
 function Unit:disembark(transport)
   self.pos = transport.pos
   self.isBoarded = false
-  self:placeActor(self.pos)
+  map:placeActor(self.actor, self.pos)
   
   self.actor:unhide()
 end
@@ -209,13 +212,20 @@ function Unit:move(dest, direction)
       local x = map:long(path[i].x)
       local y = map:long(path[i].y)
       local cellcost = map:getCost(self, path[i])  -- The unit will move slower in proportion to the cost of moving into the cell.
-      queue(self.actor.moveTo, self.actor, x, y, 0.05 * cellcost)
-      queue(blockWhile, self.isMoving, self)  -- Must be queued, as unit won't be moving until the next frame (when queue is accessed).
+      
+      q:queue(function()
+          self.actor:moveTo(x, y, 0.05 * cellcost)
+        end)
+      -- "Why queue it?" Because there's an action for each space moved, not just one, and they must be done in sequence rather than all at once.
+      -- There is a SequenceAction in this case as well, but if the queue is needed anywhere, then I guess I can just as easily use it here too.
+      q:queueBlockWhile(function()  -- Must be queued, as unit won't be moving until the next frame (when queue is accessed).
+          return self:isMoving()
+        end)
     end
     fuelcost = direction * astars.cost
   else
     -- Backwards: just snap back. But adjust the fuel cost, as there was a cost to move to the current space, and no cost to move from path[1].
-    self:placeActor(dest)
+    map:placeActor(self.actor, dest)
     fuelcost = direction * (astars.cost + map:getCost(self, start) - map:getCost(self, path[1]))
   end
   
@@ -229,7 +239,7 @@ function Unit:move(dest, direction)
   map:storeUnitRef(self)
 end
 function Unit:isMoving()
-  return (self.actor:getActions().size > 0)
+  return self.actor:isActing()
 end
 function Unit:simulateAttack(target, wepindex)
   return g.damageCalc(self.CLASS, self.hp, wepindex, target.CLASS, target.hp, map:getDefence(target.pos))
@@ -238,7 +248,7 @@ function Unit:attack(target, wepindex)
   local damage = self:simulateAttack(target, wepindex)
   
   local weapon = self.weps[wepindex]
-  weapon:fire()
+  weapon:fire(self.pos)
   
   local targetIsAlive = target.hp > damage
   target:takeDamage(damage)
@@ -261,13 +271,17 @@ function Unit:simulateBattle(target, wepindex)
 end
 function Unit:battle(target, wepindex)
   local targetIsAlive = self:attack(target, wepindex)
+
+  q:queueBlockFor(1)
   
   -- Check if the target is alive. They will counterattack with the first available weapon.
   --feels really bad and ***REMOVED*** that i check for the target being alive in two different ways. this whole thing is just a fucking mess.
   if targetIsAlive then
     local counterweps = target:validweps(target.pos, self, false)
     if #counterweps > 0 then
-      target:attack(self, counterweps[1])
+      q:queue(function()
+          target:attack(self, counterweps[1])
+        end)
     end
   end
   
@@ -324,7 +338,9 @@ function Weapon:isStatic()
   end
 end
 
-function Weapon:fire()
+function Weapon:fire(vector)
+  fx.fire(vector)
+  
   if self.MAXAMMO then
     self.ammo = self.ammo - 1
   end

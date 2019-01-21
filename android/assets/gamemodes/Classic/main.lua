@@ -7,7 +7,8 @@
 local modepath = "PCW/gamemodes/Classic"
 local world
 local inputmap
-local queueList = {}
+
+local q
 
 local lastX local lastY
 
@@ -22,10 +23,13 @@ function init(childmode, gameScreen, gameCamera, gameStage, uiCamera, uiStage, t
     end
   end
   gameScreen:finishLoadingAssets()
+  
+  local g = require "Globals"
+  q = FuncQueue()
   -- Loads the appropriate World and InputMap for the child mode (Play/MapEditor/ReplayViewer).
   local w = require(childmode .. "/World")
   local im = require(childmode .. "/InputMap")
-  world = w.World(gameScreen, gameCamera, tiledMap, externalDir, uiStage)
+  world = w.World(gameScreen, gameCamera, tiledMap, externalDir, uiStage, q)
   inputmap = im.InputMap(world, inputKeys, inputButtons)
 end
 
@@ -39,25 +43,9 @@ function runlistener(func, obj, args, event, actor)
   end
 end
 
-function queue(func, ...)
-  -- A FIFO queue of functions and their arguments.
-  table.insert(queueList, {func, ...})
-end
-
-function blockWhile(func, ...)
-  -- Continually adds itself to the front of the queue if the function evaluates to true.
-  --you'd think there'd be a cleaner way to defer evaluation of an arbitrary condition...
-  if func(...) then
-    table.insert(queueList, 1, {blockWhile, func, ...})
-  end
-end
 function loop(delta)
-  --should probably be checking this queue constantly until blockWhile...or is that even possible? must be blockWhile would have to signal that?
-  if next(queueList) ~= nil then
-    local functable = table.remove(queueList, 1)
-    local func = table.remove(functable, 1)
-    func(table.unpack(functable))
-  end
+  -- Every frame,
+  q:executeNext()  -- Advance the queue.
 end
 
 -- Input event handling methods below.

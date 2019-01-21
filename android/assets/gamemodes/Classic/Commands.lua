@@ -52,7 +52,9 @@ function u.AttackCommand:init(unit, wepindex, target)
   self.target = target
   self.targetHp = target.hp
   self.targetwep = target.weps[g.tryKeys(target:validweps(target.pos, unit, false), {1})]  -- Gets the first valid wep (not index) from target.
-  self.twepammo = self.targetwep.ammo
+  if self.targetwep then
+    self.twepammo = self.targetwep.ammo
+  end
   self:execute()
 end
 function u.AttackCommand:execute()
@@ -230,7 +232,7 @@ function u.GameMove:init(moveCommand, actionCommand)
 end
 function u.GameMove:execute()
   self.moveCommand:execute()
-  queue(function () 
+  queue(function() 
       self.actionCommand:execute()
     end)
 end

@@ -6,11 +6,9 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.*;
 import com.badlogic.gdx.scenes.scene2d.*;
-import com.badlogic.gdx.scenes.scene2d.actions.Actions;
-import com.badlogic.gdx.scenes.scene2d.actions.ColorAction;
-import com.badlogic.gdx.scenes.scene2d.actions.MoveByAction;
-import com.badlogic.gdx.scenes.scene2d.actions.MoveToAction;
+import com.badlogic.gdx.scenes.scene2d.actions.*;
 import com.pcw.game.Scripting.ScriptManager;
+import javafx.scene.Parent;
 import org.luaj.vm2.Globals;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.jse.JsePlatform;
@@ -29,13 +27,15 @@ public class MapActor extends Actor {
     private String animname;
     private float frametime;
     private Animation.PlayMode playmode;
-    private float stateTime = 0f;
+    private float stateTime;
 
     // This actor can switch between animated and not, once constructed.
 
     // The Animation class does not seem to be capable of variable frame times out-of-box. I could implement it later.
 
-    public MapActor() {}
+    public MapActor(Stage stg) {
+        parentStage = stg;
+    }
 
     public void setImage(Texture newtex) {
         isAnimated = false;
@@ -60,6 +60,11 @@ public class MapActor extends Actor {
         isAnimated = true;
         animname = newanim;
         anim = new Animation<TextureRegion>(frametime, atlas.findRegions(animname), playmode);
+        stateTime = 0f;
+    }
+
+    public boolean isPlayingAnim() {
+        return !anim.isAnimationFinished(stateTime);
     }
 
     public Animation.PlayMode getPlayMode(){
@@ -80,6 +85,10 @@ public class MapActor extends Actor {
         anim.setFrameDuration(frametime);
     }
 
+    public boolean isActing() {
+        return (getActions().size > 0);
+    }
+
     public void tint(int rgba8888) {
         // why have i done this instead of this.setColor()?
         ColorAction ca = new ColorAction();
@@ -97,6 +106,7 @@ public class MapActor extends Actor {
 
     public void moveTo(float x, float y, float duration) {
         // Apparently this action is pooled.
+        // And yeah I know I could use a SequenceAction for pathing.
         this.addAction(Actions.moveTo(x, y, duration));
     }
 
@@ -105,7 +115,6 @@ public class MapActor extends Actor {
         // The MapActor will GC if there are no references to it.
         // Not sure how that works if the only reference is in Lua. lol.
         // Maybe a collectgarbage() or something. Dunno.
-        parentStage = this.getStage();
         this.remove();
     }
 
@@ -136,6 +145,10 @@ public class MapActor extends Actor {
     @Override
     public void act(float delta) {
         super.act(delta);
+        // For global anim sync, could get stateTime upon construction,
+        //  or ask a parent for it every frame, so that you don't keep storing the same time.
+        // Though a method call is probably slower than storing and computing it.
+        // Need a benchmarking map at some point.
         stateTime += delta;
     }
 

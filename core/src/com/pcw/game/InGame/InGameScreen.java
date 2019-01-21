@@ -148,9 +148,11 @@ public class InGameScreen implements Screen, InputProcessor, GestureListener {
         return new TiledMapTileLayer.Cell();
     }
 
-    public MapActor newActor(){
-        MapActor luaActor = new MapActor();
-        gameStage.addActor(luaActor);
+    public MapActor newActor(boolean drawNow){
+        MapActor luaActor = new MapActor(gameStage);
+        if (drawNow) {
+            luaActor.unhide();
+        }
         return luaActor;
     }
 

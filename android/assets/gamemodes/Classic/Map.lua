@@ -32,7 +32,7 @@ local terrainLayer
 local terrainSet
 
 u.Map = class()
-function u.Map:init(w, h, gameScreen, teamUnits)
+function u.Map:init(w, h, gameScreen, teamUnits, queue)
   
   --need to load from file at some point.
   
@@ -80,7 +80,7 @@ function u.Map:init(w, h, gameScreen, teamUnits)
     attackrangecells = RANGES_SET:getTile(3)
   }
   
-  units.init(gameScreen, self, teamUnits)
+  units.init(gameScreen, self, teamUnits, queue)
   local inf1 = units.Infantry(13, 12, g.TEAMS.BLUE)
   local inf2 = units.Infantry(12, 11, g.TEAMS.BLUE)
   local inf5 = units.Infantry(13, 10, g.TEAMS.BLUE)
@@ -275,6 +275,12 @@ function u.Map:short(x)
   --"Short" coordinates.
   local coord = math.floor(x / CELLSIZE)
   return coord
+end
+
+function u.Map:placeActor(actor, vector)
+  --Sets the position of a Scene2D actor, assuming the passed vector is in "short" coordinates.
+  --use for the cursor too?
+  actor:setPosition(self:long(vector.x), self:long(vector.y))
 end
 
 function u.Map:manrange(start, minrange, maxrange)
