@@ -5,7 +5,6 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.*;
 import com.badlogic.gdx.scenes.scene2d.*;
 import com.badlogic.gdx.scenes.scene2d.actions.*;
-import com.badlogic.gdx.utils.TimeUtils;
 
 public class MapActor extends Actor {
 
@@ -24,6 +23,8 @@ public class MapActor extends Actor {
     private float stateTime;
 
     // Related to flashing.
+    private boolean isFlashing = false;
+    private double lifeTime;
     private double flashEndTime;
     private float flashSpeed;
     private double nextFlashTime;
@@ -91,10 +92,11 @@ public class MapActor extends Actor {
     }
 
     public void flash(float duration, float speed, float flashAlpha2) {
+        isFlashing = true;
         // Speed is in alpha switches per second.
-        flashEndTime = this.getSystemTime() + duration;
+        flashEndTime = lifeTime + duration;
         flashSpeed = speed;
-        preFlashAlpha = getAlpha();
+        preFlashAlpha = this.getAlpha();
         cycleAlpha = flashAlpha2;
     }
 
@@ -149,12 +151,6 @@ public class MapActor extends Actor {
         }
     }
 
-    private double getSystemTime() {
-        // Returns seconds.
-        //surely this method shouldn't even be here?
-        return TimeUtils.nanoTime() / 1e9;
-    }
-
     @Override
     public void draw(Batch batch, float parentAlpha) {
         Color color = getColor();
@@ -176,22 +172,20 @@ public class MapActor extends Actor {
         stateTime += delta;
 
         // Flashing.
-        //this feels like it should use delta or something. what's wrong with this anyway? do i really need accumulator?
-        //why is this even here if it doesn't use delta?
-        double thetime = this.getSystemTime();
-        // If still need to flash,
-        if (thetime < flashEndTime) {
-            // and we've reached the next switch,
-            if (thetime >= nextFlashTime) {
-                // then switch, unless the flash will end at that time; in which case, stop flashing.
-                nextFlashTime = thetime + 1f/flashSpeed;
-                if (nextFlashTime >= flashEndTime) {
-                    setAlpha(preFlashAlpha);
-                } else {
+        if (isFlashing) {
+            if (lifeTime < flashEndTime) { // check if the flash needs to end
+                if (lifeTime >= nextFlashTime) { // check if the alpha needs to switch
+                    nextFlashTime = lifeTime + 1f/flashSpeed;
                     switchAlpha(preFlashAlpha, cycleAlpha);
                 }
+            } else {
+                isFlashing = false;
+                setAlpha(preFlashAlpha);
             }
         }
+        //feels wrong to have a separate life timer for each actor when there should be a global anim syncing timer.
+        //but, later.
+        lifeTime += delta;
     }
 
     @Override

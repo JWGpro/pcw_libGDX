@@ -68,7 +68,7 @@ function Unit:takeDamage(x)
     self:die()
   else
     fx.damage(self.pos)
-    self.actor:flash(0.5, 60, 0.5)
+    self.actor:flash(1, 60, 0.5)
   end
 end
 function Unit:die()
