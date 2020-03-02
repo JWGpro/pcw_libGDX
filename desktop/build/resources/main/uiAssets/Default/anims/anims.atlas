@@ -1,0 +1,104 @@
+
+anims.png
+size: 64,128
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+cursoridle
+  rotate: false
+  xy: 2, 94
+  size: 18, 18
+  orig: 18, 18
+  offset: 0, 0
+  index: 1
+cursoridle
+  rotate: false
+  xy: 2, 74
+  size: 18, 18
+  orig: 18, 18
+  offset: 0, 0
+  index: 2
+damage
+  rotate: false
+  xy: 22, 96
+  size: 16, 16
+  orig: 16, 16
+  offset: 0, 0
+  index: 1
+damage
+  rotate: false
+  xy: 2, 56
+  size: 16, 16
+  orig: 16, 16
+  offset: 0, 0
+  index: 2
+damage
+  rotate: false
+  xy: 22, 78
+  size: 16, 16
+  orig: 16, 16
+  offset: 0, 0
+  index: 3
+damage
+  rotate: false
+  xy: 40, 96
+  size: 16, 16
+  orig: 16, 16
+  offset: 0, 0
+  index: 4
+damage
+  rotate: false
+  xy: 2, 38
+  size: 16, 16
+  orig: 16, 16
+  offset: 0, 0
+  index: 5
+damage
+  rotate: false
+  xy: 40, 78
+  size: 16, 16
+  orig: 16, 16
+  offset: 0, 0
+  index: 6
+fire
+  rotate: false
+  xy: 2, 20
+  size: 16, 16
+  orig: 16, 16
+  offset: 0, 0
+  index: 1
+fire
+  rotate: false
+  xy: 2, 2
+  size: 16, 16
+  orig: 16, 16
+  offset: 0, 0
+  index: 2
+fire
+  rotate: false
+  xy: 22, 60
+  size: 16, 16
+  orig: 16, 16
+  offset: 0, 0
+  index: 3
+fire
+  rotate: false
+  xy: 40, 60
+  size: 16, 16
+  orig: 16, 16
+  offset: 0, 0
+  index: 4
+fire
+  rotate: false
+  xy: 20, 42
+  size: 16, 16
+  orig: 16, 16
+  offset: 0, 0
+  index: 5
+fire
+  rotate: false
+  xy: 20, 24
+  size: 16, 16
+  orig: 16, 16
+  offset: 0, 0
+  index: 6
