@@ -4,9 +4,9 @@ A work-in-progress Advance Wars clone written in Java and Lua with libGDX, for P
 
 Java was used for "engine" logic, while Lua was used to implement game logic, to allow for user-made mods. The codebase was refactored multiple times.
 
-Some features implemented manually:
+Some features implemented:
 - Attempts at design patterns; [Command](https://gameprogrammingpatterns.com/command.html) for "replays" (the ability to play back and rewind played games), [State](https://gameprogrammingpatterns.com/state.html).
-- [A* pathfinding](https://en.wikipedia.org/wiki/A*_search_algorithm) for evaluating valid routes
+- [A* pathfinding](https://en.wikipedia.org/wiki/A*_search_algorithm) written from scratch for evaluating valid routes
 - Input mapping, multiplexed event handling
 - A primitive map maker which can serialise to files
 
