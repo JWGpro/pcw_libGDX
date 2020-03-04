@@ -1,6 +1,6 @@
 # pcw_libGDX
 
-A work-in-progress Advance Wars clone written in Java and Lua with libGDX, for PC and Android. July 2017 - January 2019 (on hiatus).
+A work-in-progress Advance Wars clone written in Java and Lua with libGDX, for PC and Android. July 2017 - January 2019 (currently on hiatus).
 
 Java was used for "engine" logic, while Lua was used to implement game logic, to allow for user-made mods. The codebase was refactored multiple times.
 
