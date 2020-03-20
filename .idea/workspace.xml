@@ -1,14 +1,139 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="dfcf10ee-457f-4814-bf7b-4bc82e9303c9" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/android/assets/gamemodes/Classic/Units.lua" beforeDir="false" afterPath="$PROJECT_DIR$/android/assets/gamemodes/Classic/Units.lua" afterDir="false" />
+    <list default="true" id="3a2c1b0d-2138-4bf2-af4d-97ee3f9a669f" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gradle/5.4.1/executionHistory/executionHistory.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/5.4.1/executionHistory/executionHistory.bin" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gradle/5.4.1/executionHistory/executionHistory.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/5.4.1/executionHistory/executionHistory.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gradle/5.4.1/fileContent/fileContent.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/5.4.1/fileContent/fileContent.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gradle/5.4.1/fileHashes/fileHashes.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/5.4.1/fileHashes/fileHashes.bin" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gradle/5.4.1/fileHashes/fileHashes.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/5.4.1/fileHashes/fileHashes.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gradle/5.4.1/javaCompile/classAnalysis.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/5.4.1/javaCompile/classAnalysis.bin" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gradle/5.4.1/javaCompile/javaCompile.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/5.4.1/javaCompile/javaCompile.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gradle/5.4.1/javaCompile/taskHistory.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/5.4.1/javaCompile/taskHistory.bin" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gradle/buildOutputCleanup/buildOutputCleanup.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/buildOutputCleanup/buildOutputCleanup.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gradle/buildOutputCleanup/cache.properties" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/buildOutputCleanup/cache.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gradle/buildOutputCleanup/outputFiles.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/buildOutputCleanup/outputFiles.bin" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/caches/gradle_models.ser" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/caches/gradle_models.ser" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/gradle.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/gradle.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_badlogicgames_gdx_gdx_1_9_10_jar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_badlogicgames_gdx_gdx_backend_android_1_9_10_jar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_badlogicgames_gdx_gdx_box2d_1_9_10_jar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__core_core_1_0.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__org_luaj_luaj_jse_3_0_1_jar.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__robovm_cocoatouch_2_3_7.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__robovm_objc_2_3_7.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__robovm_rt_2_3_7.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/core_core_1_0.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules/project.iml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/project.iml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/AndroidManifest.xml" beforeDir="false" afterPath="$PROJECT_DIR$/android/AndroidManifest.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/android.iml" beforeDir="false" afterPath="$PROJECT_DIR$/android/android.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/assets/gamemodes/Classic/Assets.lua" beforeDir="false" afterPath="$PROJECT_DIR$/android/assets/gamemodes/Classic/Assets.lua" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/assets/gamemodes/Classic/Commands.lua" beforeDir="false" afterPath="$PROJECT_DIR$/android/assets/gamemodes/Classic/Commands.lua" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/assets/gamemodes/Classic/Cursor.lua" beforeDir="false" afterPath="$PROJECT_DIR$/android/assets/gamemodes/Classic/Cursor.lua" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/assets/gamemodes/Classic/Effects.lua" beforeDir="false" afterPath="$PROJECT_DIR$/android/assets/gamemodes/Classic/Effects.lua" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/assets/gamemodes/Classic/Globals.lua" beforeDir="false" afterPath="$PROJECT_DIR$/android/assets/gamemodes/Classic/Globals.lua" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/assets/gamemodes/Classic/Map.lua" beforeDir="false" afterPath="$PROJECT_DIR$/android/assets/gamemodes/Classic/Map.lua" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/assets/gamemodes/Classic/MapEditor/InputMap.lua" beforeDir="false" afterPath="$PROJECT_DIR$/android/assets/gamemodes/Classic/MapEditor/InputMap.lua" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/assets/gamemodes/Classic/MapEditor/TileSelectUI.lua" beforeDir="false" afterPath="$PROJECT_DIR$/android/assets/gamemodes/Classic/MapEditor/TileSelectUI.lua" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/assets/gamemodes/Classic/MapEditor/World.lua" beforeDir="false" afterPath="$PROJECT_DIR$/android/assets/gamemodes/Classic/MapEditor/World.lua" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/assets/gamemodes/Classic/Play/ActionMenu.lua" beforeDir="false" afterPath="$PROJECT_DIR$/android/assets/gamemodes/Classic/Play/ActionMenu.lua" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/assets/gamemodes/Classic/Play/DeployMenu.lua" beforeDir="false" afterPath="$PROJECT_DIR$/android/assets/gamemodes/Classic/Play/DeployMenu.lua" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/assets/gamemodes/Classic/Play/InputMap.lua" beforeDir="false" afterPath="$PROJECT_DIR$/android/assets/gamemodes/Classic/Play/InputMap.lua" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/assets/gamemodes/Classic/Play/TargetMenu.lua" beforeDir="false" afterPath="$PROJECT_DIR$/android/assets/gamemodes/Classic/Play/TargetMenu.lua" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/assets/gamemodes/Classic/Play/UnloadMenu.lua" beforeDir="false" afterPath="$PROJECT_DIR$/android/assets/gamemodes/Classic/Play/UnloadMenu.lua" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/assets/gamemodes/Classic/Play/World.lua" beforeDir="false" afterPath="$PROJECT_DIR$/android/assets/gamemodes/Classic/Play/World.lua" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/assets/gamemodes/Classic/Terrains.lua" beforeDir="false" afterPath="$PROJECT_DIR$/android/assets/gamemodes/Classic/Terrains.lua" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/assets/gamemodes/Classic/class.lua" beforeDir="false" afterPath="$PROJECT_DIR$/android/assets/gamemodes/Classic/class.lua" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/assets/gamemodes/Classic/main.lua" beforeDir="false" afterPath="$PROJECT_DIR$/android/assets/gamemodes/Classic/main.lua" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/assets/gamemodes/scripts.json" beforeDir="false" afterPath="$PROJECT_DIR$/android/assets/gamemodes/scripts.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/build/intermediates/bundle_manifest/debug/processDebugManifest/bundle-manifest/AndroidManifest.xml" beforeDir="false" afterPath="$PROJECT_DIR$/android/build/intermediates/bundle_manifest/debug/processDebugManifest/bundle-manifest/AndroidManifest.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/build/intermediates/bundle_manifest/debug/processDebugManifest/bundle-manifest/output.json" beforeDir="false" afterPath="$PROJECT_DIR$/android/build/intermediates/bundle_manifest/debug/processDebugManifest/bundle-manifest/output.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/build/intermediates/merged_manifests/debug/AndroidManifest.xml" beforeDir="false" afterPath="$PROJECT_DIR$/android/build/intermediates/merged_manifests/debug/AndroidManifest.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/build/intermediates/merged_manifests/debug/output.json" beforeDir="false" afterPath="$PROJECT_DIR$/android/build/intermediates/merged_manifests/debug/output.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/build/outputs/logs/manifest-merger-debug-report.txt" beforeDir="false" afterPath="$PROJECT_DIR$/android/build/outputs/logs/manifest-merger-debug-report.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/assetManifestGen.py" beforeDir="false" afterPath="$PROJECT_DIR$/assetManifestGen.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/build/libs/core-1.0.jar" beforeDir="false" afterPath="$PROJECT_DIR$/core/build/libs/core-1.0.jar" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/src/com/pcw/game/InGame/InGameScreen.java" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/com/pcw/game/InGame/InGameScreen.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/src/com/pcw/game/InGame/MapActor.java" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/com/pcw/game/InGame/MapActor.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/src/com/pcw/game/Menus/MainMenu.java" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/com/pcw/game/Menus/MainMenu.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/src/com/pcw/game/Menus/Menu.java" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/com/pcw/game/Menus/Menu.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/src/com/pcw/game/Menus/OptionsMenu.java" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/com/pcw/game/Menus/OptionsMenu.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/src/com/pcw/game/Menus/PlayMenu.java" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/com/pcw/game/Menus/PlayMenu.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/src/com/pcw/game/Scripting/ExecuteScript.java" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/com/pcw/game/Scripting/ExecuteScript.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/src/com/pcw/game/Scripting/LuaScript.java" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/com/pcw/game/Scripting/LuaScript.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/src/com/pcw/game/Scripting/Script.java" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/com/pcw/game/Scripting/Script.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/src/com/pcw/game/Scripting/ScriptManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/com/pcw/game/Scripting/ScriptManager.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/assetManifest.txt" beforeDir="false" afterPath="$PROJECT_DIR$/desktop/build/resources/main/assetManifest.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/gamemodes/Classic/Units.lua" beforeDir="false" afterPath="$PROJECT_DIR$/desktop/build/resources/main/gamemodes/Classic/Units.lua" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/maps/test_tbl.map" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/menuskins/Glassy/font-big-export.fnt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/menuskins/Glassy/font-export.fnt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/menuskins/Glassy/glassy-ui.atlas" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/menuskins/Glassy/glassy-ui.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/menuskins/Glassy/glassy-ui.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/sfx/damage.ogg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/sfx/fire.ogg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/terrainAssets/Default/airfield_blue.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/terrainAssets/Default/airfield_neutral.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/terrainAssets/Default/airfield_red.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/terrainAssets/Default/city_blue.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/terrainAssets/Default/city_neutral.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/terrainAssets/Default/city_red.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/terrainAssets/Default/factory_blue.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/terrainAssets/Default/factory_neutral.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/terrainAssets/Default/factory_red.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/terrainAssets/Default/forest.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/terrainAssets/Default/hq_blue.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/terrainAssets/Default/hq_red.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/terrainAssets/Default/mountain.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/terrainAssets/Default/plain.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/terrainAssets/Default/port_blue.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/terrainAssets/Default/port_neutral.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/terrainAssets/Default/port_red.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/terrainAssets/Default/reef.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/terrainAssets/Default/river.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/terrainAssets/Default/road.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/terrainAssets/Default/sea.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/terrainAssets/Default/shoal.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/uiAssets/Default/anims/anims.atlas" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/uiAssets/Default/anims/anims.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/uiAssets/Default/anims/cursoridle/cursoridle_1.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/uiAssets/Default/anims/cursoridle/cursoridle_2.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/uiAssets/Default/anims/damage/damage_1.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/uiAssets/Default/anims/damage/damage_2.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/uiAssets/Default/anims/damage/damage_3.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/uiAssets/Default/anims/damage/damage_4.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/uiAssets/Default/anims/damage/damage_5.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/uiAssets/Default/anims/damage/damage_6.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/uiAssets/Default/anims/fire/fire_1.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/uiAssets/Default/anims/fire/fire_2.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/uiAssets/Default/anims/fire/fire_3.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/uiAssets/Default/anims/fire/fire_4.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/uiAssets/Default/anims/fire/fire_5.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/uiAssets/Default/anims/fire/fire_6.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/uiAssets/Default/attack.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/uiAssets/Default/moveend.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/uiAssets/Default/moveseg.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/uiAssets/Default/movetile.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/uiAssets/Default/select.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/unitAssets/Default/apc_red.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/unitAssets/Default/inf_blue_1.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/unitAssets/Default/inf_blue_2.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/unitAssets/Default/inf_red_1.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/desktop/build/resources/main/unitAssets/Default/inf_red_2.png" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+  <component name="ExecutionTargetManager" SELECTED_TARGET="5019aa5a" />
   <component name="ExternalProjectsData">
     <projectState path="$PROJECT_DIR$">
       <ProjectState />
@@ -17,34 +142,26 @@
   <component name="ExternalProjectsManager">
     <system id="GRADLE">
       <state>
-        <projects_view>
-          <tree_state>
-            <expand />
-            <select />
-          </tree_state>
-        </projects_view>
+        <projects_view />
       </state>
     </system>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="ProjectId" id="1QIz7v42lmGNBItjM4VLSfqiPMN" />
-  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectId" id="1ZMYdkEhzBvftKWZrkHk8t4qW8z" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showExcludedFiles" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent">
-    <property name="ASKED_ADD_EXTERNAL_FILES" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
-    <property name="external.system.task.project.file.to.start" value="$PROJECT_DIR$" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/android/assets" />
     <property name="project.structure.last.edited" value="Project" />
     <property name="project.structure.proportion" value="0.0" />
     <property name="project.structure.side.proportion" value="0.0" />
-    <property name="settings.editor.selected.configurable" value="editor.preferences.tabs" />
+    <property name="settings.editor.selected.configurable" value="configurable.group.language" />
     <property name="show.unlinked.gradle.project.popup" value="true" />
   </component>
   <component name="RunManager" selected="Application.DesktopLauncher">
@@ -62,7 +179,7 @@
       <option name="SHOW_LOGCAT_AUTOMATICALLY" value="false" />
       <option name="SKIP_NOOP_APK_INSTALLATIONS" value="true" />
       <option name="FORCE_STOP_RUNNING_APP" value="true" />
-      <option name="TARGET_SELECTION_MODE" value="SHOW_DIALOG" />
+      <option name="TARGET_SELECTION_MODE" value="DEVICE_AND_SNAPSHOT_COMBO_BOX" />
       <option name="USE_LAST_SELECTED_DEVICE" value="false" />
       <option name="PREFERRED_AVD" value="" />
       <option name="DEBUGGER_TYPE" value="Java" />
@@ -78,18 +195,13 @@
         <option name="Android.Gradle.BeforeRunTask" enabled="true" />
       </method>
     </configuration>
-    <configuration name="DesktopLauncher" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+    <configuration name="DesktopLauncher" type="Application" factoryName="Application">
+      <option name="ALTERNATIVE_JRE_PATH" value="1.8" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
       <option name="MAIN_CLASS_NAME" value="com.pcw.game.desktop.DesktopLauncher" />
       <module name="desktop" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/android/assets" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="com.pcw.game.desktop.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
       <method v="2">
-        <option name="Gradle.BeforeRunTask" enabled="false" tasks="runManifestGen" externalProjectPath="$PROJECT_DIR$" vmOptions="" scriptParameters="" />
         <option name="Make" enabled="true" />
       </method>
     </configuration>
@@ -97,58 +209,52 @@
       <item itemvalue="Android App.android" />
       <item itemvalue="Application.DesktopLauncher" />
     </list>
-    <recent_temporary>
-      <list>
-        <item itemvalue="Application.DesktopLauncher" />
-      </list>
-    </recent_temporary>
-  </component>
-  <component name="ServiceViewManager">
-    <option name="viewStates">
-      <list>
-        <serviceView>
-          <treeState>
-            <expand />
-            <select />
-          </treeState>
-        </serviceView>
-      </list>
-    </option>
   </component>
   <component name="SvnConfiguration">
     <configuration />
   </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
-      <changelist id="dfcf10ee-457f-4814-bf7b-4bc82e9303c9" name="Default Changelist" comment="" />
-      <created>1567472734099</created>
+      <changelist id="3a2c1b0d-2138-4bf2-af4d-97ee3f9a669f" name="Default Changelist" comment="" />
+      <created>1584650519324</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
-      <updated>1567472734099</updated>
+      <updated>1584650519324</updated>
     </task>
     <servers />
   </component>
-  <component name="Vcs.Log.Tabs.Properties">
-    <option name="TAB_STATES">
-      <map>
-        <entry key="MAIN">
-          <value>
-            <State>
-              <option name="COLUMN_ORDER" />
-            </State>
-          </value>
-        </entry>
-      </map>
-    </option>
-  </component>
   <component name="WindowStateProjectService">
-    <state x="617" y="271" width="440" height="518" key="FileChooserDialogImpl" timestamp="1576562187369">
+    <state x="158" y="158" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1584660141374">
       <screen x="0" y="0" width="1920" height="1055" />
     </state>
-    <state x="617" y="271" width="440" height="518" key="FileChooserDialogImpl/0.0.1920.1055/0.0.1920.1055@0.0.1920.1055" timestamp="1576562187369" />
-    <state x="653" y="354" key="com.intellij.ide.util.TipDialog" timestamp="1574991638994">
+    <state x="158" y="158" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1920.1055@0.0.1920.1055" timestamp="1584660141374" />
+    <state x="432" y="286" width="541" height="433" key="#com.intellij.ide.util.TreeClassChooserDialog" timestamp="1584660131056">
       <screen x="0" y="0" width="1920" height="1055" />
     </state>
-    <state x="653" y="354" key="com.intellij.ide.util.TipDialog/0.0.1920.1055/0.0.1920.1055@0.0.1920.1055" timestamp="1574991638994" />
+    <state x="432" y="286" width="541" height="433" key="#com.intellij.ide.util.TreeClassChooserDialog/0.0.1920.1055@0.0.1920.1055" timestamp="1584660131056" />
+    <state x="483" y="258" width="440" height="490" key="FileChooserDialogImpl" timestamp="1584660005477">
+      <screen x="0" y="0" width="1920" height="1055" />
+    </state>
+    <state x="483" y="258" width="440" height="490" key="FileChooserDialogImpl/0.0.1920.1055@0.0.1920.1055" timestamp="1584660005477" />
+    <state width="1338" height="259" key="GridCell.Tab.0.bottom" timestamp="1584723374981">
+      <screen x="0" y="0" width="1920" height="1055" />
+    </state>
+    <state width="1338" height="259" key="GridCell.Tab.0.bottom/0.0.1920.1055@0.0.1920.1055" timestamp="1584723374981" />
+    <state width="1338" height="259" key="GridCell.Tab.0.center" timestamp="1584723374981">
+      <screen x="0" y="0" width="1920" height="1055" />
+    </state>
+    <state width="1338" height="259" key="GridCell.Tab.0.center/0.0.1920.1055@0.0.1920.1055" timestamp="1584723374981" />
+    <state width="1338" height="259" key="GridCell.Tab.0.left" timestamp="1584723374980">
+      <screen x="0" y="0" width="1920" height="1055" />
+    </state>
+    <state width="1338" height="259" key="GridCell.Tab.0.left/0.0.1920.1055@0.0.1920.1055" timestamp="1584723374980" />
+    <state width="1338" height="259" key="GridCell.Tab.0.right" timestamp="1584723374981">
+      <screen x="0" y="0" width="1920" height="1055" />
+    </state>
+    <state width="1338" height="259" key="GridCell.Tab.0.right/0.0.1920.1055@0.0.1920.1055" timestamp="1584723374981" />
+    <state x="204" y="135" width="992" height="736" key="SettingsEditor" timestamp="1584660118001">
+      <screen x="0" y="0" width="1920" height="1055" />
+    </state>
+    <state x="204" y="135" width="992" height="736" key="SettingsEditor/0.0.1920.1055@0.0.1920.1055" timestamp="1584660118001" />
   </component>
 </project>

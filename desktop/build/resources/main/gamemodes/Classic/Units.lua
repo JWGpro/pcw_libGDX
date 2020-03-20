@@ -68,7 +68,7 @@ function Unit:takeDamage(x)
     self:die()
   else
     fx.damage(self.pos)
-    self.actor:flash(1, 60, 0.5)  --could be proportional to damage taken
+    self.actor:flash(1, 60, 0.5)
   end
 end
 function Unit:die()
@@ -253,20 +253,13 @@ function Unit:attack(target, wepindex)
   local weapon = self.weps[wepindex]
   weapon:fire(self.pos)
 
-  --the below delay only occurs after the delays set in the fire effect have finished.
-  --...a separate queue for effects and actions that cause them?...
-  --this is getting really confusing, isn't it? isn't there another way?
-  --maybe the queue...needs to...check ...err...check everything that is queued, to see if they can be execd...maybe it makes no sense to execute everything sequentially...erm, this is probs what's called a "callback"...
-  q:queueBlockFor(0.5)  --here you could delay proportional to distance of attack.
+  q:queueBlockFor(0.5)
+  --remember: you need to queue stuff afterwards for this to do anything.
   
   local targetIsAlive = target.hp > damage
-  
-  q:queue(function()
-      target:takeDamage(damage)
-      print(target.team, target.NAME, target.hp)
-    end)
-  
-  return targetIsAlive  --this can't be queued, or this method won't return the fucking boolean to whoever asked for it!
+  target:takeDamage(damage)
+  print(target.team, target.NAME, target.hp)
+  return targetIsAlive
 end
 function Unit:simulateBattle(target, wepindex)
   local attackerDamage = self:simulateAttack(target, wepindex)
