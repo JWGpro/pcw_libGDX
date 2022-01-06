@@ -17,3 +17,7 @@ Pertinent Lua files can be found in:
 [android/assets/gamemodes](https://github.com/JWGpro/pcw_libGDX/tree/master/android/assets/gamemodes)
 
 The entry point is [here](https://github.com/JWGpro/pcw_libGDX/blob/master/desktop/src/com/pcw/game/desktop/DesktopLauncher.java).
+
+# Importing and Running
+
+https://libgdx.com/dev/import-and-running/
