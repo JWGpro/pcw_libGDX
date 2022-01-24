@@ -1,7 +1,7 @@
--- Courtesy of:  http://lua-users.org/wiki/SimpleLuaClasses
+-- Adapted from:  http://lua-users.org/wiki/SimpleLuaClasses
 
 --[[
-  Modified version around the mt constructor. Class declarations:
+Class declarations:
 
 A = class()
 function A:init(x)
@@ -26,16 +26,13 @@ print(leo:is_a(Animal))
 print(leo:is_a(Cat))
 ]]--
 
--- class.lua
--- Compatible with Lua 5.1 (not 5.0).
-function class(base, init)
-   local c = {}    -- a new class instance
-   if not init and type(base) == 'function' then
-      init = base
-      base = nil
-   elseif type(base) == 'table' then
-    -- our new class is a shallow copy of the base class!
-      for i,v in pairs(base) do
+function class(base)
+   -- a new class instance
+   local c = {}
+
+   if type(base) == 'table' then
+      -- our new class is a shallow copy of the base class!
+      for i, v in pairs(base) do
          c[i] = v
       end
       c._base = base
@@ -46,30 +43,26 @@ function class(base, init)
 
    -- expose a constructor which can be called by <classname>(<args>)
    local mt = {}
+
    mt.__call = function(class_tbl, ...)
-   local obj = {}
-   setmetatable(obj,c)
---   if init then
-   if class_tbl.init then
---      init(obj,...)
-      class_tbl.init(obj,...)
-   else 
-      -- make sure that any stuff from the base class is initialized!
-      if base and base.init then
-      base.init(obj, ...)
+      local obj = {}
+      setmetatable(obj, c)
+      if class_tbl.init then
+         class_tbl.init(obj, ...)
       end
+      return obj
    end
-   return obj
-   end
-   c.init = init
+
    c.is_a = function(self, klass)
       local m = getmetatable(self)
-      while m do 
+      while m do
          if m == klass then return true end
          m = m._base
       end
       return false
    end
+
    setmetatable(c, mt)
+
    return c
 end
