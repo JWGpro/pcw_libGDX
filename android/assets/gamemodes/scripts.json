@@ -1,3 +1,4 @@
 {
-	Classic: "Classic/main.lua",
+	"Classic": "Classic/main.lua",
+	"Classic_Teal": "Classic_Teal/main.tl"
 }
