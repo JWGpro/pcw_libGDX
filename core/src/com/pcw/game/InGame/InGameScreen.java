@@ -285,6 +285,10 @@ public class InGameScreen implements Screen, InputProcessor, GestureListener {
         return assetManager.get(path);
     }
 
+    public void throwException() {
+        // TODO: When you want a script crash to stop the presses. Could just quit this screen with an error message.
+    }
+
     @Override
     public void show() {
 
