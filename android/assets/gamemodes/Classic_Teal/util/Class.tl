@@ -1,6 +1,8 @@
 local record Class
+    -- setup: function()
+    -- instantiate: function()
+    _base: Class
     new: function(Class, ...: any): Class
-    instantiate: function(Class, table)
 end
 function Class.setup(newclass: table, base: table)
     base = base or (Class as table)
@@ -12,6 +14,7 @@ function Class.setup(newclass: table, base: table)
     for k, v in pairs(base) do
         newclass[k] = v
     end
+    newclass._base = base
 
     -- Class:instantiate() sets an object's metatable to its class.
     -- So the class __index will point to itself for method lookup.
@@ -22,18 +25,20 @@ function Class.setup(newclass: table, base: table)
     setmetatable(newclass, {
         __call = function(calledclass: Class, ...): table
             -- calledclass == newclass here.
-            -- We use calledclass, typed as Class, which declares .new.
-            return calledclass:new(...) as table
+            -- We use calledclass, typed as Class, because it defines .new.
+            local obj: table = {}
+            setmetatable(obj, calledclass as metatable<table>)
+            calledclass.new(obj as Class, ...)
+            return obj
         end
     } as metatable<table>)
 end
-function Class:new()
+function Class:new(...)
     error("__call was called (e.g. `local x = Class(y, z)`) on a class with no .new method. Define one for that class!")
 end
-function Class:instantiate(newobj: table): table
-    newobj = newobj or {}
-    setmetatable(newobj, self)  -- self will be the calling class.
-    return newobj
+function Class:super(...)
+    local superclass = self._base  -- self will be the new object.
+    superclass.new(self, ...)
 end
 Class.setup(Class as table)
 

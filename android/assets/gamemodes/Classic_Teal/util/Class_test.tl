@@ -1,6 +1,6 @@
 -- TODO: Refactor using a real test framework.
 
-local Class = require("Class")
+local Class = require("util/Class")
 
 
 -- Unit
@@ -15,11 +15,9 @@ local record Unit
     metamethod __call: function(Unit, number, number): Unit
 end
 Class.setup(Unit as table)
-function Unit:new(x: number, y: number): Unit
-    local o = self:instantiate()
-    o.x = x
-    o.y = y
-    return o
+function Unit:new(x: number, y: number)
+    self.x = x
+    self.y = y
 end
 function Unit:deduct()
     self.x = self.x - 1
@@ -43,12 +41,13 @@ local record Infantry
     add: function(Infantry)
     -- shoot: function(Infantry)
     instantiate: function(Infantry, Unit): Infantry
+    metamethod __call: function(Infantry, number, number, number): Infantry
+    super: function(Infantry, number, number)
 end
 Class.setup(Infantry as table, Unit as table)
-function Infantry:new(x: number, y: number, z: number): Infantry
-    local o = self:instantiate(Unit:new(x, y))
-    o.z = z
-    return o
+function Infantry:new(x: number, y: number, z: number)
+    self:super(x, y)
+    self.z = z
 end
 function Infantry:shoot()
     self.z = self.z - 1
@@ -81,19 +80,20 @@ local record Mech
     y: number
     instantiate: function(Mech, Unit): Mech
     __tostring: function(Mech): string
+    metamethod __call: function(Mech, number, number, number): Mech
+    super: function(Mech, number, number)
 end
 Class.setup(Mech as table, Unit as table)
-function Mech:new(x: number, y: number, z: number): Mech
-    local o = self:instantiate(Unit:new(x, y))
-    o.z = z
-    return o
+function Mech:new(x: number, y: number, z: number)
+    self:super(x, y)
+    self.z = z
 end
 -- We want __tostring to be inherited from Unit.
 
 
 -- tests
 
-local unit = Unit:new(32, 65)
+local unit = Unit(32, 65)
 print("Can create new class instance")
 assert(unit.x == 32)
 print("Initialised field correct")
@@ -106,7 +106,7 @@ assert(unit:__tostring() == "33,65")
 print("Class object stringified correctly:")
 print(unit)
 
-local inf = Infantry:new(88, 49, 12)
+local inf = Infantry(88, 49, 12)
 print("Can create new subclass instance")
 assert(inf.x == 88)
 print("Initialised field correct")
@@ -132,7 +132,7 @@ local canDoBadThing = pcall(IncompleteClass)
 assert(canDoBadThing == false)
 print("Throws error when no .new method defined on class")
 
-local mech = Mech:new(38, 12, 4)
+local mech = Mech(38, 12, 4)
 assert(mech:__tostring() == "38,12")
 print("__tostring metamethod inherited from base:")
 print(mech)
