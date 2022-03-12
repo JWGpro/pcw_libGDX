@@ -11,7 +11,6 @@ local record Unit
     -- new: function(Class): Class
     -- deduct: function(Unit)
     -- add: function(Unit)
-    instantiate: function(Unit): Unit
     metamethod __call: function(Unit, number, number): Unit
 end
 Class.setup(Unit as table)
@@ -40,13 +39,12 @@ local record Infantry
     -- deduct: function(Infantry)
     add: function(Infantry)
     -- shoot: function(Infantry)
-    instantiate: function(Infantry, Unit): Infantry
     metamethod __call: function(Infantry, number, number, number): Infantry
-    super: function(Infantry, number, number)
+    _super: function(Infantry, number, number)
 end
 Class.setup(Infantry as table, Unit as table)
 function Infantry:new(x: number, y: number, z: number)
-    self:super(x, y)
+    self:_super(x, y)
     self.z = z
 end
 function Infantry:shoot()
@@ -78,17 +76,35 @@ local record Mech
 
     x: number
     y: number
-    instantiate: function(Mech, Unit): Mech
     __tostring: function(Mech): string
     metamethod __call: function(Mech, number, number, number): Mech
-    super: function(Mech, number, number)
+    _super: function(Mech, number, number)
 end
 Class.setup(Mech as table, Unit as table)
 function Mech:new(x: number, y: number, z: number)
-    self:super(x, y)
+    self:_super(x, y)
     self.z = z
 end
 -- We want __tostring to be inherited from Unit.
+
+
+-- SubInfantry (Infantry subclass)
+
+local record SubInfantry
+    x: number
+    y: number
+    z: number
+    w: number
+
+    __tostring: function(SubInfantry): string
+    metamethod __call: function(SubInfantry, number, number, number, number): SubInfantry
+    _super: function(SubInfantry, number, number, number)
+end
+Class.setup(SubInfantry as table, Infantry as table)
+function SubInfantry:new(x: number, y: number, z: number, w: number)
+    self:_super(x, y, z)
+    self.w = w
+end
 
 
 -- tests
@@ -136,3 +152,13 @@ local mech = Mech(38, 12, 4)
 assert(mech:__tostring() == "38,12")
 print("__tostring metamethod inherited from base:")
 print(mech)
+
+local subinf = SubInfantry(1, 2, 3, 4)
+assert(subinf.x == 1)
+assert(subinf.y == 2)
+assert(subinf.z == 3)
+assert(subinf.w == 4)
+print("Subclass of subclass instantiated correctly from two _super() calls")
+assert(subinf:__tostring() == "1,2,3")
+print("__tostring metamethod re-inherited from Infantry base:")
+print(subinf)
