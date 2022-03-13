@@ -8,13 +8,13 @@ local Class = require("util/Class")
 local record Unit
     x: number
     y: number
-    -- new: function(Class): Class
+    -- _new: function(Class): Class
     -- deduct: function(Unit)
     -- add: function(Unit)
     metamethod __call: function(Unit, number, number): Unit
 end
 Class.setup(Unit as table)
-function Unit:new(x: number, y: number)
+function Unit:_new(x: number, y: number)
     self.x = x
     self.y = y
 end
@@ -43,7 +43,7 @@ local record Infantry
     _super: function(Infantry, number, number)
 end
 Class.setup(Infantry as table, Unit as table)
-function Infantry:new(x: number, y: number, z: number)
+function Infantry:_new(x: number, y: number, z: number)
     self:_super(x, y)
     self.z = z
 end
@@ -81,7 +81,7 @@ local record Mech
     _super: function(Mech, number, number)
 end
 Class.setup(Mech as table, Unit as table)
-function Mech:new(x: number, y: number, z: number)
+function Mech:_new(x: number, y: number, z: number)
     self:_super(x, y)
     self.z = z
 end
@@ -101,7 +101,7 @@ local record SubInfantry
     _super: function(SubInfantry, number, number, number)
 end
 Class.setup(SubInfantry as table, Infantry as table)
-function SubInfantry:new(x: number, y: number, z: number, w: number)
+function SubInfantry:_new(x: number, y: number, z: number, w: number)
     self:_super(x, y, z)
     self.w = w
 end
@@ -134,7 +134,7 @@ assert(inf.x == 87)
 print("Can call inherited method")
 inf:shoot()
 assert(inf.z == 11)
-print("Can call new method")
+print("Can call extra method")
 assert(inf:__tostring() == "87,49,11")
 print("Subclass object stringified correctly:")
 print(inf)
@@ -146,7 +146,7 @@ print(callUnit)
 -- calls IncompleteClass(), catching error
 local canDoBadThing = pcall(IncompleteClass)
 assert(canDoBadThing == false)
-print("Throws error when no .new method defined on class")
+print("Throws error when no ._new method defined on class")
 
 local mech = Mech(38, 12, 4)
 assert(mech:__tostring() == "38,12")

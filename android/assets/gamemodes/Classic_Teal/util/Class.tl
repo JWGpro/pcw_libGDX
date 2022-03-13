@@ -17,7 +17,7 @@ local METAMETHODS = func.setOf{
 
 local record Class
     _base: Class
-    new: function(Class, ...: any): Class
+    _new: function(Class, ...: any): Class
 end
 function Class.setup(newclass: table, base: table)
     base = base or (Class as table)
@@ -32,7 +32,7 @@ function Class.setup(newclass: table, base: table)
             newclass[k] = v
         end
     end
-    -- Define _super() to point to the base class new() - just not for Class.
+    -- Define _super() to point to the base class _new() - just not for Class.
     if base ~= (Class as table) then
         newclass._super = function(obj, ...)
             -- Temporarily set the object's class to the base...
@@ -41,7 +41,7 @@ function Class.setup(newclass: table, base: table)
 
             local superclass = base as Class
             setmetatable(obj, superclass as metatable<Class>)
-            superclass.new(obj as Class, ...)
+            superclass._new(obj as Class, ...)
 
             setmetatable(obj, objClass)
         end
@@ -57,10 +57,10 @@ function Class.setup(newclass: table, base: table)
         __index = base,
         __call = function(calledclass: Class, ...): table
             -- calledclass == newclass here.
-            -- We use calledclass, typed as Class, because it defines .new.
+            -- We use calledclass, typed as Class, because it defines ._new.
             local obj: table = {}
             setmetatable(obj, calledclass as metatable<table>)
-            calledclass.new(obj as Class, ...)
+            calledclass._new(obj as Class, ...)
             return obj
         end
     } as metatable<table>)
@@ -72,8 +72,8 @@ function Class.setup(newclass: table, base: table)
     -- Infantry.mt.__index == Unit
     -- infantry.mt.__index == Infantry
 end
-function Class:new(...)
-    error("__call was called (e.g. `local x = Class(y, z)`) on a class with no .new method. Define one for that class!")
+function Class:_new(...)
+    error("__call was called (e.g. `local x = Class(y, z)`) on a class with no ._new method. Define one for that class!")
 end
 Class.setup(Class as table)
 
