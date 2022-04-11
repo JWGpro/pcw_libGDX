@@ -12,7 +12,7 @@ local q
 
 local lastX local lastY
 
-function init(childmode, gameScreen, gameCamera, gameStage, uiCamera, uiStage, tiledMap, externalDir, inputKeys, inputButtons)
+function init(childmode, gameScreen, gameCamera, gameStage, uiCamera, uiStage, tiledMap, externalDir)
   -- Initialise everything here to prevent any possibility of hanging later!
   package.path =  externalDir .. modepath .. "/?.lua;" .. package.path
   -- Loading assets...
@@ -30,7 +30,9 @@ function init(childmode, gameScreen, gameCamera, gameStage, uiCamera, uiStage, t
   local w = require(childmode .. "/World")
   local im = require(childmode .. "/InputMap")
   world = w.World(gameScreen, gameCamera, tiledMap, externalDir, uiStage, q)
-  inputmap = im.InputMap(world, inputKeys, inputButtons)
+  local Keys = require("javaclassdefs/Keys")
+  local Buttons = require("javaclassdefs/Buttons")
+  inputmap = im.InputMap(world, Keys, Buttons)
 end
 
 function runlistener(func, obj, args, event, actor)

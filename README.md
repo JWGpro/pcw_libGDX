@@ -20,4 +20,10 @@ The entry point is [here](https://github.com/JWGpro/pcw_libGDX/blob/master/deskt
 
 # Importing and Running
 
+Mainly the below:
 https://libgdx.com/dev/import-and-running/
+
+Though, a pre-launch task should be configured to run the Python 3 script assetManifestGen.py:
+$ python3 assetManifestGen.py
+This copies assets and scripts to a folder in the user's home directory to make them available at runtime.
+Probably going to be rethought.

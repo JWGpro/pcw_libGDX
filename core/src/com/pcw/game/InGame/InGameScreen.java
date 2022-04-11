@@ -88,9 +88,7 @@ public class InGameScreen implements Screen, InputProcessor, GestureListener {
                 UICamera,
                 UIStage,
                 tiledMap,
-                Gdx.files.getExternalStoragePath(),
-                Input.Keys.class,
-                Input.Buttons.class
+                Gdx.files.getExternalStoragePath()
         );
 
         // Set input processor to allow the argument to receive input events.
