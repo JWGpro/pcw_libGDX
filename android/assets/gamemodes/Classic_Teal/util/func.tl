@@ -69,20 +69,24 @@ function g.hasVector2key(table, vec)
   end
 end
 
-function g.cycle(table, check, direction)
+]]
+
+function u.cycle(tbl: {any}, check: any, direction: integer): any
   -- Takes an array-like table and returns a value relative to the position of the check.
   -- When direction == 1, cycles forwards (returning the next value). When direction == -1, cycles backwards.
   -- But values other than 1 and -1 should work too.
-  for i,v in ipairs(table) do
+  for i, v in ipairs(tbl) do
     if v == check then
       -- (i + direction) gives the sought index. Modulo forces it to cycle inside the table.
       -- +1 gives Lua-valid indexes (e.g. 1-3 instead of 0-2).
       -- -1 fixes offset for Lua indexing (e.g. 0 >> #table, 1 >> 1 instead of -1 >> #table, 0 >> 1).
-      local index = ((i + direction - 1) % #table) + 1
-      return table[index]
+      local index = ((i + direction - 1) % #tbl) + 1
+      return tbl[index]
     end
   end
 end
+
+--[[
 
 function g.damageCalc(Aclass, Ahp, Awep, Dclass, Dhp, Ddef)
   -- HP is expected to be passed raw (1-100). It's converted to a float with step 0.1 (0.1, 0.2...1.0).

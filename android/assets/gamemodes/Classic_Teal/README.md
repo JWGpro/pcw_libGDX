@@ -39,4 +39,4 @@ local c = class.new()
 ```
 
 The .lua and .t.dl files should have the same filename and be required via the same path, e.g. residing in the same directory.
-The type check `tl check` will then refer to the .d.tl file; execution will refer to the .lua file as normal.
+The type check `tl check` will then refer to the .d.tl file, execution will refer to the .lua file as normal.

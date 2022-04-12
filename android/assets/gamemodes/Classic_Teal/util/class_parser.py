@@ -11,7 +11,7 @@ def parseSubclass(classPath: str):
     className = os.path.basename(classPath).split(".")[0]  # Can parse absolute path
     classFile = readToString(classPath)
     superName = re.search(f"{EXTENDS_START} (.+)", classFile).group(1)
-    superFile = readToString(f"{superName}.tl")  # TODO: look at require()
+    superFile = readToString(f"{os.path.dirname(classPath)}/{superName}.tl")  # TODO: look at require()
 
     superRecord = re.search(f"record {superName}(.|\n)*?(\nend)", superFile).group()
     superRecordLines = re.split("\n\s*", superRecord)
