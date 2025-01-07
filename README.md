@@ -27,3 +27,9 @@ Though, a pre-launch task should be configured to run the Python 3 script assetM
 $ python3 assetManifestGen.py
 This copies assets and scripts to a folder in the user's home directory to make them available at runtime.
 Probably going to be rethought.
+
+# License
+
+Licensed under the GNU Affero General Public License 3 or any later version at your choice.
+
+SPDX-License-Identifier: AGPL-3.0-or-later
