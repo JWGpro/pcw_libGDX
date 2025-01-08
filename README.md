@@ -1,6 +1,8 @@
+*This repository is deprecated; development of this project moved to a new implementation [pcwkt](https://github.com/JWGpro/pcwkt) on 2022-10-28.*
+
 # pcw_libGDX
 
-A work-in-progress Advance Wars clone written in Java and Lua with libGDX, for PC and Android. July 2017 - January 2019, January 2022 - present.
+A work-in-progress Advance Wars clone written in Java and Lua with libGDX, for PC and Android. Developed July 2017 - January 2019, then January 2022 until the deprecation date.
 
 Java was used for "engine" logic, while Lua was used to implement game logic, to allow for user-made mods. The codebase was refactored multiple times.
 
